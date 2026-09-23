@@ -25,6 +25,7 @@ body {
     padding: 0 25px;
 
     background: #0f0f0f;
+    color: white;
 
     border-bottom: 1px solid #272727;
 
@@ -52,7 +53,7 @@ body {
 }
 
 .play-icon {
-    background: red;
+    background: rgba(255, 60, 0, 0.854);
 
     padding: 5px 8px;
 
@@ -2746,4 +2747,65 @@ body {
         width: 100% !important;
     }
 
+}
+
+/* ==========================================
+   HIDE SCROLLBAR ON WATCH PAGE
+   ========================================== */
+
+body.watching-media {
+    scrollbar-width: none;
+}
+
+body.watching-media::-webkit-scrollbar {
+    display: none;
+}
+
+/* ==========================================
+   NO SCROLLBAR WHILE WATCHING
+   ========================================== */
+
+body.watching-media {
+    scrollbar-width: none;
+}
+
+body.watching-media::-webkit-scrollbar {
+    display: none;
+    width: 0;
+}
+
+
+/* LocalTube watch modal */
+body.watching-media #playerModal {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body.watching-media #playerModal::-webkit-scrollbar {
+    display: none;
+    width: 0;
+}
+
+
+/* Watch page */
+body.watching-media .watch-page {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body.watching-media .watch-page::-webkit-scrollbar {
+    display: none;
+    width: 0;
+}
+
+
+/* Recommendation list */
+body.watching-media .recommendations {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body.watching-media .recommendations::-webkit-scrollbar {
+    display: none;
+    width: 0;
 }

@@ -59,11 +59,323 @@ let currentFilter = "all";
 // OPEN FOLDER PICKER
 // ==========================================
 
-folderBtn.addEventListener("click", function () {
+// ==========================================
+// FOLDER PICKER
+// ==========================================
 
-    folderInput.click();
+const LAST_FOLDER_DB = "LocalTubeFolderDB";
+const LAST_FOLDER_STORE = "folderStore";
+const LAST_FOLDER_KEY = "lastFolder";
 
-});
+
+// ==========================================
+// OPEN DATABASE
+// ==========================================
+
+function openFolderDatabase() {
+
+    return new Promise((resolve, reject) => {
+
+        const request = indexedDB.open(
+            LAST_FOLDER_DB,
+            1
+        );
+
+        request.onupgradeneeded = function (event) {
+
+            const db = event.target.result;
+
+            if (!db.objectStoreNames.contains(LAST_FOLDER_STORE)) {
+
+                db.createObjectStore(
+                    LAST_FOLDER_STORE
+                );
+
+            }
+
+        };
+
+        request.onsuccess = function () {
+
+            resolve(request.result);
+
+        };
+
+        request.onerror = function () {
+
+            reject(request.error);
+
+        };
+
+    });
+
+}
+
+
+// ==========================================
+// SAVE FOLDER HANDLE
+// ==========================================
+
+async function saveFolderHandle(handle) {
+
+    try {
+
+        const db =
+            await openFolderDatabase();
+
+        const transaction =
+            db.transaction(
+                LAST_FOLDER_STORE,
+                "readwrite"
+            );
+
+        transaction
+            .objectStore(LAST_FOLDER_STORE)
+            .put(
+                handle,
+                LAST_FOLDER_KEY
+            );
+
+    } catch (error) {
+
+        console.log(
+            "Could not save folder:",
+            error
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// GET SAVED FOLDER HANDLE
+// ==========================================
+
+async function getSavedFolderHandle() {
+
+    try {
+
+        const db =
+            await openFolderDatabase();
+
+        return new Promise((resolve, reject) => {
+
+            const transaction =
+                db.transaction(
+                    LAST_FOLDER_STORE,
+                    "readonly"
+                );
+
+            const request =
+                transaction
+                    .objectStore(LAST_FOLDER_STORE)
+                    .get(LAST_FOLDER_KEY);
+
+            request.onsuccess = function () {
+
+                resolve(
+                    request.result || null
+                );
+
+            };
+
+            request.onerror = function () {
+
+                reject(request.error);
+
+            };
+
+        });
+
+    } catch (error) {
+
+        console.log(
+            "Could not get saved folder:",
+            error
+        );
+
+        return null;
+
+    }
+
+}
+
+
+// ==========================================
+// READ ALL FILES FROM FOLDER
+// ==========================================
+
+async function readFolderFiles(folderHandle) {
+
+    const files = [];
+
+
+    async function readDirectory(directory) {
+
+        for await (
+            const entry of directory.values()
+        ) {
+
+            if (entry.kind === "file") {
+
+                try {
+
+                    const file =
+                        await entry.getFile();
+
+                    if (
+                        file.type.startsWith("video/") ||
+                        file.type.startsWith("image/")
+                    ) {
+
+                        files.push(file);
+
+                    }
+
+                } catch (error) {
+
+                    console.log(
+                        "File read error:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            else if (
+                entry.kind === "directory"
+            ) {
+
+                await readDirectory(entry);
+
+            }
+
+        }
+
+    }
+
+
+    await readDirectory(folderHandle);
+
+    return files;
+
+}
+
+
+// ==========================================
+// SELECT FOLDER
+// ==========================================
+
+async function chooseFolder() {
+
+    // Modern browser support
+    if (
+        "showDirectoryPicker" in window
+    ) {
+
+        try {
+
+            const folderHandle =
+                await window.showDirectoryPicker({
+                    mode: "read"
+                });
+
+
+            // Request permission
+            const permission =
+                await folderHandle.requestPermission({
+                    mode: "read"
+                });
+
+
+            if (
+                permission !== "granted"
+            ) {
+
+                return;
+
+            }
+
+
+            // Save folder
+            await saveFolderHandle(
+                folderHandle
+            );
+
+
+            // Read files
+            const files =
+                await readFolderFiles(
+                    folderHandle
+                );
+
+
+            mediaFiles = files;
+
+
+            console.log(
+                "Folder:",
+                folderHandle.name
+            );
+
+            console.log(
+                "Media files:",
+                mediaFiles
+            );
+
+
+            showMedia();
+
+
+        }
+
+        catch (error) {
+
+            if (
+                error.name === "AbortError"
+            ) {
+
+                return;
+
+            }
+
+
+            console.log(
+                "Folder picker error:",
+                error
+            );
+
+        }
+
+    }
+
+    else {
+
+        // Old browser fallback
+        folderInput.click();
+
+    }
+
+}
+
+
+// ==========================================
+// BUTTONS
+// ==========================================
+
+folderBtn.addEventListener(
+    "click",
+    chooseFolder
+);
+
+
+selectFolderEmpty.addEventListener(
+    "click",
+    chooseFolder
+);
 
 
 selectFolderEmpty.addEventListener("click", function () {
@@ -77,27 +389,41 @@ selectFolderEmpty.addEventListener("click", function () {
 // FOLDER SELECTED
 // ==========================================
 
-folderInput.addEventListener("change", function (event) {
+folderInput.addEventListener(
+    "change",
+    function (event) {
 
-    const files = Array.from(event.target.files);
+        const files =
+            Array.from(
+                event.target.files
+            );
 
 
-    mediaFiles = files.filter(function (file) {
+        mediaFiles =
+            files.filter(function (file) {
 
-        return (
-            file.type.startsWith("video/") ||
-            file.type.startsWith("image/")
+                return (
+                    file.type.startsWith("video/") ||
+                    file.type.startsWith("image/")
+                );
+
+            });
+
+
+        console.log(
+            "Media files:",
+            mediaFiles
         );
 
-    });
+
+        showMedia();
 
 
-    console.log("Media files:", mediaFiles);
+        // Same folder ko dobara select karne ki permission
+        folderInput.value = "";
 
-
-    showMedia();
-
-});
+    }
+);
 
 
 // ==========================================
@@ -393,6 +719,9 @@ function openMedia(file) {
 
 
     playerModal.classList.add("show");
+
+// Hide browser scrollbar while watching
+document.body.classList.add("watching-media");
 
 
     // File name
@@ -711,10 +1040,14 @@ function closePlayerWindow() {
     videoPlayer.pause();
 
     videoPlayer.removeAttribute("src");
+    videoPlayer.load();
 
     imageViewer.removeAttribute("src");
 
     playerModal.classList.remove("show");
+
+    // Show scrollbar again
+    document.body.classList.remove("watching-media");
 
 }
 
@@ -1001,28 +1334,23 @@ document.addEventListener(
     "keydown",
     function (event) {
 
-
         // Player open nahi hai
         if (
             !playerModal.classList.contains("show")
         ) {
-
             return;
-
         }
 
 
         // ==================================
-        // INPUT / SEARCH ME TYPE KAR RAHE HO
+        // INPUT / TEXTAREA
         // ==================================
 
         if (
             event.target.tagName === "INPUT" ||
             event.target.tagName === "TEXTAREA"
         ) {
-
             return;
-
         }
 
 
@@ -1032,14 +1360,12 @@ document.addEventListener(
 
         if (event.code === "Space") {
 
-            // Sirf video ke liye
             if (
                 currentMediaFile &&
                 currentMediaFile.type.startsWith("video/")
             ) {
 
                 event.preventDefault();
-
 
                 if (videoPlayer.paused) {
 
@@ -1069,6 +1395,8 @@ document.addEventListener(
                 currentMediaFile.type.startsWith("video/")
             ) {
 
+                event.preventDefault();
+
                 videoPlayer.currentTime =
                     Math.max(
                         0,
@@ -1093,6 +1421,8 @@ document.addEventListener(
                 currentMediaFile.type.startsWith("video/")
             ) {
 
+                event.preventDefault();
+
                 videoPlayer.currentTime =
                     Math.min(
                         videoPlayer.duration || Infinity,
@@ -1108,7 +1438,11 @@ document.addEventListener(
         // LEFT ARROW = PREVIOUS
         // ==================================
 
-        else if (event.key === "ArrowLeft") {
+        else if (
+            event.key === "ArrowLeft"
+        ) {
+
+            event.preventDefault();
 
             previousMediaFile();
 
@@ -1119,25 +1453,72 @@ document.addEventListener(
         // RIGHT ARROW = NEXT
         // ==================================
 
-        else if (event.key === "ArrowRight") {
+        else if (
+            event.key === "ArrowRight"
+        ) {
+
+            event.preventDefault();
 
             nextMediaFile();
 
         }
+
+
         // ==================================
-// F = FULLSCREEN TOGGLE
-// ==================================
+        // UP ARROW = SCROLL UP
+        // ==================================
 
-else if (event.key.toLowerCase() === "f") {
+        else if (
+            event.key === "ArrowUp"
+        ) {
 
-    event.preventDefault();
+            event.preventDefault();
 
-    toggleFullscreen();
+            playerModal.scrollBy({
+                top: -400,
+                behavior: "smooth"
+            });
 
-}
+        }
+
+
+        // ==================================
+        // DOWN ARROW = SCROLL DOWN
+        // ==================================
+
+        else if (
+            event.key === "ArrowDown"
+        ) {
+
+            event.preventDefault();
+
+            playerModal.scrollBy({
+                top: 400,
+                behavior: "smooth"
+            });
+
+        }
+
+
+        // ==================================
+        // F = FULLSCREEN
+        // ==================================
+
+        else if (
+            event.key.toLowerCase() === "f"
+        ) {
+
+            event.preventDefault();
+
+            toggleFullscreen();
+
+        }
 
     }
 );
+
+
+
 
 // ==========================================
 // MORE MEDIA BELOW PLAYER
@@ -1434,3 +1815,98 @@ function toggleFullscreen() {
     }
 
 }
+
+// ==========================================
+// RESTORE LAST FOLDER
+// ==========================================
+
+async function restoreLastFolder() {
+
+    if (
+        !("showDirectoryPicker" in window)
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const folderHandle =
+            await getSavedFolderHandle();
+
+
+        if (!folderHandle) {
+
+            return;
+
+        }
+
+
+        // Check saved permission
+        const permission =
+            await folderHandle.queryPermission({
+                mode: "read"
+            });
+
+
+        if (
+            permission !== "granted"
+        ) {
+
+            console.log(
+                "Folder permission required."
+            );
+
+            return;
+
+        }
+
+
+        // Read folder again
+        const files =
+            await readFolderFiles(
+                folderHandle
+            );
+
+
+        if (
+            files.length === 0
+        ) {
+
+            return;
+
+        }
+
+
+        mediaFiles = files;
+
+
+        console.log(
+            "Last folder restored:",
+            folderHandle.name
+        );
+
+
+        showMedia();
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Could not restore folder:",
+            error
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// START RESTORE
+// ==========================================
+
+restoreLastFolder();
