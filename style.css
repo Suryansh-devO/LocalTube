@@ -894,17 +894,11 @@ body {
 }
 
 
-/* Keyboard hint */
+/* No on-screen Previous / Next hint.
+   Keyboard arrows are still handled by JavaScript. */
 
 .media-details::after {
-
-    content: "← →  Previous / Next";
-
-    margin-left: auto;
-
-    color: #777;
-
-
+    content: none;
 }
 
 
@@ -2808,4 +2802,231 @@ body.watching-media .recommendations {
 body.watching-media .recommendations::-webkit-scrollbar {
     display: none;
     width: 0;
+}
+
+/* ==========================================
+   VIDEO WRAPPER
+   ========================================== */
+
+.video-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+
+/* ==========================================
+   MAIN VIDEO
+   ========================================== */
+
+#videoPlayer {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+
+/* ==========================================
+   CUSTOM VIDEO CONTROLS
+   ========================================== */
+
+.custom-video-controls {
+    width: 100%;
+    min-height: 50px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 8px 12px;
+
+    box-sizing: border-box;
+}
+
+
+/* ==========================================
+   CONTROL BUTTONS
+   ========================================== */
+
+.custom-video-controls button {
+    border: none;
+    background: #222;
+    color: white;
+
+    padding: 8px 12px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+}
+
+
+.custom-video-controls button:hover {
+    background: #333;
+}
+
+
+/* ==========================================
+   PROGRESS BAR
+   ========================================== */
+
+#videoProgress {
+    flex: 1;
+    cursor: pointer;
+}
+
+
+/* ==========================================
+   TIME
+   ========================================== */
+
+#videoCurrentTime,
+#videoDuration {
+    color: white;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   HIDE OLD PREVIOUS / NEXT
+   ========================================== */
+
+.media-nav {
+    display: none !important;
+}
+
+/* =========================================================
+   LOCAL TUBE - FINAL PLAYER FIXES
+   ========================================================= */
+
+/* The old side arrows are intentionally not used. */
+.media-nav {
+    display: none !important;
+}
+
+/* Video area remains on the left; recommendations stay on the right. */
+.watch-page {
+    position: relative !important;
+}
+
+/* The wrapper is the fixed 16:9 area. Rotation is applied only to
+   the video, not to the controls below it. */
+.video-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+}
+
+#videoPlayer {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
+    transform-origin: center center;
+    transition: transform 0.25s ease;
+}
+
+/* Custom controls are OUTSIDE the video wrapper, so they never rotate. */
+.custom-video-controls {
+    width: 100%;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    box-sizing: border-box;
+}
+
+.custom-video-controls button {
+    flex: 0 0 auto;
+    border: 1px solid #333;
+    background: #202020;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.custom-video-controls button:hover {
+    background: #333;
+}
+
+.custom-video-controls button:active {
+    transform: translateY(1px);
+}
+
+#videoProgress {
+    flex: 1 1 auto;
+    min-width: 80px;
+    cursor: pointer;
+    accent-color: #fff;
+}
+
+#videoCurrentTime,
+#videoDuration {
+    color: #aaa;
+    font-size: 13px;
+    white-space: nowrap;
+    min-width: 34px;
+    text-align: center;
+}
+
+/* No old native-video control bar. */
+#videoPlayer:not([controls]) {
+    outline: none;
+}
+
+@media (max-width: 700px) {
+    .custom-video-controls {
+        gap: 6px;
+        padding: 8px 0;
+    }
+
+    .custom-video-controls button {
+        padding: 7px 8px;
+        font-size: 12px;
+    }
+
+    #rotateVideoBtn {
+        font-size: 0;
+    }
+
+    #rotateVideoBtn::before {
+        content: "🔄";
+        font-size: 16px;
+    }
+
+    #videoCurrentTime,
+    #videoDuration {
+        font-size: 11px;
+    }
+}
+.video-wrapper:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+}
+.video-wrapper:fullscreen #videoPlayer {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
 }

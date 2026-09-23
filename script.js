@@ -1,3 +1,9 @@
+
+// ==========================================
+// LOCAL TUBE - MAIN JAVASCRIPT
+// ==========================================
+
+
 // ==========================================
 // GET HTML ELEMENTS
 // ==========================================
@@ -7,29 +13,20 @@ const folderInput = document.getElementById("folderInput");
 const selectFolderEmpty = document.getElementById("selectFolderEmpty");
 
 const mediaGrid = document.getElementById("mediaGrid");
-
 const searchInput = document.getElementById("searchInput");
 
 const playerModal = document.getElementById("playerModal");
-
 const videoPlayer = document.getElementById("videoPlayer");
-
 const imageViewer = document.getElementById("imageViewer");
 
 const playerTitle = document.getElementById("playerTitle");
-
 const closePlayer = document.getElementById("closePlayer");
 
 const recommendationList =
     document.getElementById("recommendationList");
-    const belowMediaGrid =
-    document.getElementById("belowMediaGrid");
-    
-    const previousMedia =
-    document.getElementById("previousMedia");
 
-const nextMedia =
-    document.getElementById("nextMedia");
+const belowMediaGrid =
+    document.getElementById("belowMediaGrid");
 
 const mediaType =
     document.getElementById("mediaType");
@@ -37,173 +34,77 @@ const mediaType =
 const mediaSize =
     document.getElementById("mediaSize");
 
-    const watchHomeBtn =
+const watchHomeBtn =
     document.getElementById("watchHomeBtn");
-
-
-// Currently playing file
-
-let currentMediaFile = null;
+const rotateVideoBtn =
+    document.getElementById("rotateVideoBtn");
 
 
 // ==========================================
-// MEDIA DATA
+// MEDIA STATE
 // ==========================================
 
 let mediaFiles = [];
 
+let currentMediaFile = null;
+
 let currentFilter = "all";
 
+let videoRotation = 0;
 
-// ==========================================
-// OPEN FOLDER PICKER
-// ==========================================
 
-// ==========================================
-// FOLDER PICKER
-// ==========================================
-
-const LAST_FOLDER_DB = "LocalTubeFolderDB";
-const LAST_FOLDER_STORE = "folderStore";
-const LAST_FOLDER_KEY = "lastFolder";
 
 
 // ==========================================
-// OPEN DATABASE
+// OBJECT URL MANAGEMENT
 // ==========================================
 
-function openFolderDatabase() {
+// Saare temporary object URLs yahan store honge.
+// Isse unnecessary memory usage control hota hai.
 
-    return new Promise((resolve, reject) => {
+const objectUrls = new Set();
 
-        const request = indexedDB.open(
-            LAST_FOLDER_DB,
-            1
-        );
 
-        request.onupgradeneeded = function (event) {
+function createMediaURL(file) {
 
-            const db = event.target.result;
+    const url = URL.createObjectURL(file);
 
-            if (!db.objectStoreNames.contains(LAST_FOLDER_STORE)) {
+    objectUrls.add(url);
 
-                db.createObjectStore(
-                    LAST_FOLDER_STORE
-                );
-
-            }
-
-        };
-
-        request.onsuccess = function () {
-
-            resolve(request.result);
-
-        };
-
-        request.onerror = function () {
-
-            reject(request.error);
-
-        };
-
-    });
+    return url;
 
 }
 
 
-// ==========================================
-// SAVE FOLDER HANDLE
-// ==========================================
+function revokeMediaURL(url) {
 
-async function saveFolderHandle(handle) {
+    if (!url) {
+        return;
+    }
 
-    try {
+    if (objectUrls.has(url)) {
 
-        const db =
-            await openFolderDatabase();
+        URL.revokeObjectURL(url);
 
-        const transaction =
-            db.transaction(
-                LAST_FOLDER_STORE,
-                "readwrite"
-            );
-
-        transaction
-            .objectStore(LAST_FOLDER_STORE)
-            .put(
-                handle,
-                LAST_FOLDER_KEY
-            );
-
-    } catch (error) {
-
-        console.log(
-            "Could not save folder:",
-            error
-        );
+        objectUrls.delete(url);
 
     }
 
 }
 
 
-// ==========================================
-// GET SAVED FOLDER HANDLE
-// ==========================================
 
-async function getSavedFolderHandle() {
 
-    try {
 
-        const db =
-            await openFolderDatabase();
 
-        return new Promise((resolve, reject) => {
 
-            const transaction =
-                db.transaction(
-                    LAST_FOLDER_STORE,
-                    "readonly"
-                );
 
-            const request =
-                transaction
-                    .objectStore(LAST_FOLDER_STORE)
-                    .get(LAST_FOLDER_KEY);
 
-            request.onsuccess = function () {
 
-                resolve(
-                    request.result || null
-                );
-
-            };
-
-            request.onerror = function () {
-
-                reject(request.error);
-
-            };
-
-        });
-
-    } catch (error) {
-
-        console.log(
-            "Could not get saved folder:",
-            error
-        );
-
-        return null;
-
-    }
-
-}
 
 
 // ==========================================
-// READ ALL FILES FROM FOLDER
+// READ ALL MEDIA FILES
 // ==========================================
 
 async function readFolderFiles(folderHandle) {
@@ -217,26 +118,48 @@ async function readFolderFiles(folderHandle) {
             const entry of directory.values()
         ) {
 
-            if (entry.kind === "file") {
+            // ==================================
+            // FILE
+            // ==================================
+
+            if (
+                entry.kind === "file"
+            ) {
 
                 try {
 
                     const file =
                         await entry.getFile();
 
+
+                    const isVideo =
+                        file.type.startsWith(
+                            "video/"
+                        );
+
+
+                    const isImage =
+                        file.type.startsWith(
+                            "image/"
+                        );
+
+
                     if (
-                        file.type.startsWith("video/") ||
-                        file.type.startsWith("image/")
+                        isVideo ||
+                        isImage
                     ) {
 
                         files.push(file);
 
                     }
 
-                } catch (error) {
+                }
 
-                    console.log(
+                catch (error) {
+
+                    console.warn(
                         "File read error:",
+                        entry.name,
                         error
                     );
 
@@ -245,11 +168,31 @@ async function readFolderFiles(folderHandle) {
             }
 
 
+            // ==================================
+            // SUB-FOLDER
+            // ==================================
+
             else if (
                 entry.kind === "directory"
             ) {
 
-                await readDirectory(entry);
+                try {
+
+                    await readDirectory(
+                        entry
+                    );
+
+                }
+
+                catch (error) {
+
+                    console.warn(
+                        "Directory read error:",
+                        entry.name,
+                        error
+                    );
+
+                }
 
             }
 
@@ -258,7 +201,10 @@ async function readFolderFiles(folderHandle) {
     }
 
 
-    await readDirectory(folderHandle);
+    await readDirectory(
+        folderHandle
+    );
+
 
     return files;
 
@@ -271,7 +217,10 @@ async function readFolderFiles(folderHandle) {
 
 async function chooseFolder() {
 
-    // Modern browser support
+    // ======================================
+    // MODERN BROWSER
+    // ======================================
+
     if (
         "showDirectoryPicker" in window
     ) {
@@ -284,7 +233,10 @@ async function chooseFolder() {
                 });
 
 
-            // Request permission
+            // ==================================
+            // REQUEST PERMISSION
+            // ==================================
+
             const permission =
                 await folderHandle.requestPermission({
                     mode: "read"
@@ -295,40 +247,45 @@ async function chooseFolder() {
                 permission !== "granted"
             ) {
 
+                console.log(
+                    "Folder permission denied."
+                );
+
                 return;
 
             }
 
 
-            // Save folder
-            await saveFolderHandle(
-                folderHandle
-            );
+          
 
 
-            // Read files
+            // ==================================
+            // READ MEDIA
+            // ==================================
+
             const files =
                 await readFolderFiles(
                     folderHandle
                 );
 
 
-            mediaFiles = files;
+            mediaFiles =
+                files;
 
 
             console.log(
-                "Folder:",
+                "Opened folder:",
                 folderHandle.name
             );
 
+
             console.log(
                 "Media files:",
-                mediaFiles
+                mediaFiles.length
             );
 
 
             showMedia();
-
 
         }
 
@@ -343,7 +300,7 @@ async function chooseFolder() {
             }
 
 
-            console.log(
+            console.error(
                 "Folder picker error:",
                 error
             );
@@ -352,9 +309,13 @@ async function chooseFolder() {
 
     }
 
+
+    // ======================================
+    // OLD BROWSER FALLBACK
+    // ======================================
+
     else {
 
-        // Old browser fallback
         folderInput.click();
 
     }
@@ -363,67 +324,72 @@ async function chooseFolder() {
 
 
 // ==========================================
-// BUTTONS
+// FOLDER BUTTONS
 // ==========================================
 
-folderBtn.addEventListener(
-    "click",
-    chooseFolder
-);
+if (folderBtn) {
+
+    folderBtn.addEventListener(
+        "click",
+        chooseFolder
+    );
+
+}
 
 
-selectFolderEmpty.addEventListener(
-    "click",
-    chooseFolder
-);
+if (selectFolderEmpty) {
 
+    selectFolderEmpty.addEventListener(
+        "click",
+        chooseFolder
+    );
 
-selectFolderEmpty.addEventListener("click", function () {
-
-    folderInput.click();
-
-});
+}
 
 
 // ==========================================
-// FOLDER SELECTED
+// OLD BROWSER FOLDER INPUT
 // ==========================================
 
-folderInput.addEventListener(
-    "change",
-    function (event) {
+if (folderInput) {
 
-        const files =
-            Array.from(
-                event.target.files
+    folderInput.addEventListener(
+        "change",
+        function (event) {
+
+            const files =
+                Array.from(
+                    event.target.files
+                );
+
+
+            mediaFiles =
+                files.filter(function (file) {
+
+                    return (
+                        file.type.startsWith("video/") ||
+                        file.type.startsWith("image/")
+                    );
+
+                });
+
+
+            console.log(
+                "Selected media:",
+                mediaFiles
             );
 
 
-        mediaFiles =
-            files.filter(function (file) {
-
-                return (
-                    file.type.startsWith("video/") ||
-                    file.type.startsWith("image/")
-                );
-
-            });
+            showMedia();
 
 
-        console.log(
-            "Media files:",
-            mediaFiles
-        );
+            // Same folder dobara select kar sake
+            folderInput.value = "";
 
+        }
+    );
 
-        showMedia();
-
-
-        // Same folder ko dobara select karne ki permission
-        folderInput.value = "";
-
-    }
-);
+}
 
 
 // ==========================================
@@ -435,20 +401,31 @@ function showMedia() {
     mediaGrid.innerHTML = "";
 
 
+    // ======================================
+    // FILTER
+    // ======================================
+
     let filteredFiles =
         mediaFiles.filter(function (file) {
 
+            if (
+                currentFilter === "video"
+            ) {
 
-            if (currentFilter === "video") {
-
-                return file.type.startsWith("video/");
+                return file.type.startsWith(
+                    "video/"
+                );
 
             }
 
 
-            if (currentFilter === "image") {
+            if (
+                currentFilter === "image"
+            ) {
 
-                return file.type.startsWith("image/");
+                return file.type.startsWith(
+                    "image/"
+                );
 
             }
 
@@ -463,17 +440,23 @@ function showMedia() {
     // ======================================
 
     const searchText =
-        searchInput.value.toLowerCase().trim();
+        searchInput.value
+            .toLowerCase()
+            .trim();
 
 
-    if (searchText !== "") {
+    if (
+        searchText !== ""
+    ) {
 
         filteredFiles =
             filteredFiles.filter(function (file) {
 
                 return file.name
                     .toLowerCase()
-                    .includes(searchText);
+                    .includes(
+                        searchText
+                    );
 
             });
 
@@ -481,10 +464,12 @@ function showMedia() {
 
 
     // ======================================
-    // NO MEDIA
+    // EMPTY
     // ======================================
 
-    if (filteredFiles.length === 0) {
+    if (
+        filteredFiles.length === 0
+    ) {
 
         mediaGrid.innerHTML = `
             <div class="empty-message">
@@ -529,24 +514,30 @@ function createMediaCard(file) {
     const card =
         document.createElement("div");
 
-    card.className = "media-card";
+
+    card.className =
+        "media-card";
 
 
     const thumbnail =
         document.createElement("div");
 
-    thumbnail.className = "thumbnail";
+
+    thumbnail.className =
+        "thumbnail";
 
 
     const url =
-        URL.createObjectURL(file);
+        createMediaURL(file);
 
 
     // ======================================
     // VIDEO
     // ======================================
 
-    if (file.type.startsWith("video/")) {
+    if (
+        file.type.startsWith("video/")
+    ) {
 
         const video =
             document.createElement("video");
@@ -560,55 +551,63 @@ function createMediaCard(file) {
 
         video.preload = "metadata";
 
-
-        video.className = "preview-video";
-
-
-        thumbnail.appendChild(video);
+        video.className =
+            "preview-video";
 
 
-        // Preview label
+        thumbnail.appendChild(
+            video
+        );
+
+
         const icon =
             document.createElement("div");
 
-        icon.className = "preview-play";
 
-        icon.innerText = "▶ Preview";
+        icon.className =
+            "preview-play";
 
-        thumbnail.appendChild(icon);
-
-
-        // ==================================
-        // MOUSE ENTER
-        // ==================================
-
-        card.addEventListener("mouseenter", function () {
-
-            // Start from beginning
-            video.currentTime = 0;
+        icon.innerText =
+            "▶ Preview";
 
 
-            video.play().catch(function () {
-
-                // Browser autoplay restriction
-                console.log("Preview autoplay blocked");
-
-            });
-
-        });
+        thumbnail.appendChild(
+            icon
+        );
 
 
         // ==================================
-        // MOUSE LEAVE
+        // HOVER START
         // ==================================
 
-        card.addEventListener("mouseleave", function () {
+        card.addEventListener(
+            "mouseenter",
+            function () {
 
-            video.pause();
+                video.currentTime = 0;
 
-            video.currentTime = 0;
+                video.play().catch(
+                    function () {}
+                );
 
-        });
+            }
+        );
+
+
+        // ==================================
+        // HOVER STOP
+        // ==================================
+
+        card.addEventListener(
+            "mouseleave",
+            function () {
+
+                video.pause();
+
+                video.currentTime = 0;
+
+            }
+        );
 
     }
 
@@ -627,20 +626,28 @@ function createMediaCard(file) {
 
         image.alt = file.name;
 
+        image.loading = "lazy";
 
-        thumbnail.appendChild(image);
+
+        thumbnail.appendChild(
+            image
+        );
 
 
         const icon =
             document.createElement("div");
 
 
-        icon.className = "image-icon";
+        icon.className =
+            "image-icon";
 
-        icon.innerText = "🖼 Image";
+        icon.innerText =
+            "🖼 Image";
 
 
-        thumbnail.appendChild(icon);
+        thumbnail.appendChild(
+            icon
+        );
 
     }
 
@@ -653,54 +660,84 @@ function createMediaCard(file) {
         document.createElement("div");
 
 
-    title.className = "media-title";
+    title.className =
+        "media-title";
 
-    title.innerText = file.name;
+
+    title.innerText =
+        file.name;
 
 
     // ======================================
-    // FILE SIZE
+    // SIZE
     // ======================================
 
     const info =
         document.createElement("div");
 
 
-    info.className = "media-info";
-
-
-    const sizeMB =
-        (file.size / (1024 * 1024)).toFixed(1);
+    info.className =
+        "media-info";
 
 
     info.innerText =
-        sizeMB + " MB";
+        formatFileSize(
+            file.size
+        );
 
 
     // ======================================
     // ADD TO CARD
     // ======================================
 
-    card.appendChild(thumbnail);
+    card.appendChild(
+        thumbnail
+    );
 
-    card.appendChild(title);
+    card.appendChild(
+        title
+    );
 
-    card.appendChild(info);
+    card.appendChild(
+        info
+    );
 
 
     // ======================================
-    // OPEN VIDEO
+    // OPEN MEDIA
     // ======================================
 
-    card.addEventListener("click", function () {
+    card.addEventListener(
+        "click",
+        function () {
 
-        openMedia(file);
-        
+            openMedia(file);
 
-    });
+        }
+    );
 
 
-    mediaGrid.appendChild(card);
+    mediaGrid.appendChild(
+        card
+    );
+
+}
+
+
+// ==========================================
+// FILE SIZE
+// ==========================================
+
+function formatFileSize(bytes) {
+
+    const sizeMB =
+        bytes / (1024 * 1024);
+
+
+    return (
+        sizeMB.toFixed(1) +
+        " MB"
+    );
 
 }
 
@@ -711,40 +748,56 @@ function createMediaCard(file) {
 
 function openMedia(file) {
 
-    currentMediaFile = file;
+    currentMediaFile =
+        file;
+
+    // Every newly opened media starts at normal orientation.
+    resetVideoRotation();
 
 
     const url =
-        URL.createObjectURL(file);
+        createMediaURL(file);
 
 
-    playerModal.classList.add("show");
+    playerModal.classList.add(
+        "show"
+    );
 
-// Hide browser scrollbar while watching
-document.body.classList.add("watching-media");
+
+    document.body.classList.add(
+        "watching-media"
+    );
 
 
-    // File name
+    // ======================================
+    // TITLE
+    // ======================================
 
     playerTitle.innerText =
         file.name;
 
 
-    // File size
-
-    const sizeMB =
-        (file.size / (1024 * 1024)).toFixed(1);
-
+    // ======================================
+    // SIZE
+    // ======================================
 
     mediaSize.innerText =
-        sizeMB + " MB";
+        formatFileSize(
+            file.size
+        );
 
 
     // ======================================
     // VIDEO
     // ======================================
 
-    if (file.type.startsWith("video/")) {
+    if (
+        file.type.startsWith("video/")
+    ) {
+
+        if (customVideoControls) {
+            customVideoControls.style.display = "flex";
+        }
 
         mediaType.innerText =
             "🎬 Video";
@@ -757,6 +810,17 @@ document.body.classList.add("watching-media");
         videoPlayer.style.display =
             "block";
 
+        if (videoProgress) {
+            videoProgress.value = 0;
+        }
+
+        if (videoCurrentTime) {
+            videoCurrentTime.innerText = "0:00";
+        }
+
+        if (videoDuration) {
+            videoDuration.innerText = "0:00";
+        }
 
         videoPlayer.src =
             url;
@@ -766,8 +830,16 @@ document.body.classList.add("watching-media");
             false;
 
 
-        videoPlayer.play();
+        videoPlayer.play().catch(
+            function (error) {
 
+                console.log(
+                    "Video autoplay blocked:",
+                    error
+                );
+
+            }
+        );
 
     }
 
@@ -778,14 +850,19 @@ document.body.classList.add("watching-media");
 
     else {
 
+        if (customVideoControls) {
+            customVideoControls.style.display = "none";
+        }
+
         mediaType.innerText =
             "🖼 Image";
 
 
         videoPlayer.pause();
 
-
-        videoPlayer.removeAttribute("src");
+        videoPlayer.removeAttribute(
+            "src"
+        );
 
 
         videoPlayer.style.display =
@@ -803,11 +880,17 @@ document.body.classList.add("watching-media");
 
 
     // ======================================
-    // RECOMMENDATIONS
+    // OTHER MEDIA
     // ======================================
 
-    showRecommendations(file);
-    showMoreMedia(file);
+    showRecommendations(
+        file
+    );
+
+
+    showMoreMedia(
+        file
+    );
 
 }
 
@@ -816,33 +899,45 @@ document.body.classList.add("watching-media");
 // RECOMMENDATIONS
 // ==========================================
 
-function showRecommendations(currentFile) {
+function showRecommendations(
+    currentFile
+) {
 
-    recommendationList.innerHTML = "";
+    recommendationList.innerHTML =
+        "";
 
 
-    // Current video ko recommendation mein nahi dikhana
     const recommendations =
-        mediaFiles.filter(function (file) {
+        mediaFiles.filter(
+            function (file) {
 
-            return file !== currentFile;
+                return file !== currentFile;
 
-        });
+            }
+        );
 
 
-    // Maximum 10 recommendations
     const limited =
-        recommendations.slice(0, 10);
+        recommendations.slice(
+            0,
+            10
+        );
 
 
-    limited.forEach(function (file) {
+    limited.forEach(
+        function (file) {
 
-        createRecommendation(file);
+            createRecommendation(
+                file
+            );
 
-    });
+        }
+    );
 
 
-    if (limited.length === 0) {
+    if (
+        limited.length === 0
+    ) {
 
         recommendationList.innerHTML = `
             <p style="color:#aaa;">
@@ -859,7 +954,9 @@ function showRecommendations(currentFile) {
 // CREATE RECOMMENDATION
 // ==========================================
 
-function createRecommendation(file) {
+function createRecommendation(
+    file
+) {
 
     const card =
         document.createElement("div");
@@ -878,60 +975,66 @@ function createRecommendation(file) {
 
 
     const url =
-        URL.createObjectURL(file);
+        createMediaURL(file);
 
 
     // ======================================
     // VIDEO
     // ======================================
-if (file.type.startsWith("video/")) {
 
-    const video =
-        document.createElement("video");
+    if (
+        file.type.startsWith("video/")
+    ) {
 
-    video.src = url;
-
-    video.muted = true;
-
-    video.playsInline = true;
-
-    video.preload = "metadata";
-
-    video.setAttribute("webkit-playsinline", "");
-
-    thumbnail.appendChild(video);
+        const video =
+            document.createElement("video");
 
 
-    // ==============================
-    // HOVER PREVIEW START
-    // ==============================
+        video.src = url;
 
-    card.addEventListener("mouseenter", function () {
+        video.muted = true;
 
-        video.currentTime = 0;
+        video.playsInline = true;
 
-        video.play().catch(function () {
+        video.preload = "metadata";
 
-            console.log("Recommendation preview blocked");
-
-        });
-
-    });
+        video.setAttribute(
+            "webkit-playsinline",
+            ""
+        );
 
 
-    // ==============================
-    // HOVER PREVIEW STOP
-    // ==============================
+        thumbnail.appendChild(
+            video
+        );
 
-    card.addEventListener("mouseleave", function () {
 
-        video.pause();
+        card.addEventListener(
+            "mouseenter",
+            function () {
 
-        video.currentTime = 0;
+                video.currentTime = 0;
 
-    });
+                video.play().catch(
+                    function () {}
+                );
 
-}
+            }
+        );
+
+
+        card.addEventListener(
+            "mouseleave",
+            function () {
+
+                video.pause();
+
+                video.currentTime = 0;
+
+            }
+        );
+
+    }
 
 
     // ======================================
@@ -948,8 +1051,12 @@ if (file.type.startsWith("video/")) {
 
         image.alt = file.name;
 
+        image.loading = "lazy";
 
-        thumbnail.appendChild(image);
+
+        thumbnail.appendChild(
+            image
+        );
 
     }
 
@@ -986,96 +1093,495 @@ if (file.type.startsWith("video/")) {
         "recommendation-size";
 
 
-    const sizeMB =
-        (file.size / (1024 * 1024)).toFixed(1);
-
-
     size.innerText =
-        sizeMB + " MB";
+        formatFileSize(
+            file.size
+        );
 
 
-    info.appendChild(title);
+    info.appendChild(
+        title
+    );
 
-    info.appendChild(size);
-
-
-    // ======================================
-    // ADD TO CARD
-    // ======================================
-
-    card.appendChild(thumbnail);
-
-    card.appendChild(info);
+    info.appendChild(
+        size
+    );
 
 
     // ======================================
-    // CLICK RECOMMENDATION
+    // ADD
     // ======================================
 
-    card.addEventListener("click", function () {
+    card.appendChild(
+        thumbnail
+    );
 
-        openMedia(file);
+    card.appendChild(
+        info
+    );
 
-    });
+
+    // ======================================
+    // CLICK
+    // ======================================
+
+    card.addEventListener(
+        "click",
+        function () {
+
+            openMedia(
+                file
+            );
+
+        }
+    );
 
 
-    recommendationList.appendChild(card);
+    recommendationList.appendChild(
+        card
+    );
 
 }
 
+// ==========================================
+// ROTATE VIDEO
+// ==========================================
+
+function applyVideoRotation() {
+
+    if (!videoPlayer) {
+        return;
+    }
+
+    const container =
+        document.querySelector(".video-wrapper");
+
+    if (!container) {
+        return;
+    }
+
+    // Video ki original dimensions
+    const videoWidth =
+        videoPlayer.videoWidth;
+
+    const videoHeight =
+        videoPlayer.videoHeight;
+
+    if (!videoWidth || !videoHeight) {
+        return;
+    }
+
+    const containerWidth =
+        container.clientWidth;
+
+    const containerHeight =
+        container.clientHeight;
+
+    if (!containerWidth || !containerHeight) {
+        return;
+    }
+
+    // Video ka original aspect ratio
+    const videoRatio =
+        videoWidth / videoHeight;
+
+    const containerRatio =
+        containerWidth / containerHeight;
+
+    // Object-fit: contain ke according
+    // video ka actual displayed size calculate karo
+    let displayedWidth;
+    let displayedHeight;
+
+    if (videoRatio > containerRatio) {
+
+        displayedWidth =
+            containerWidth;
+
+        displayedHeight =
+            containerWidth / videoRatio;
+
+    } else {
+
+        displayedHeight =
+            containerHeight;
+
+        displayedWidth =
+            containerHeight * videoRatio;
+
+    }
+
+    // Normal orientation
+    if (videoRotation % 180 === 0) {
+
+        videoPlayer.style.transform =
+            `rotate(${videoRotation}deg)`;
+
+        return;
+    }
+
+    // 90° / 270°
+    // Rotation ke baad width/height swap ho jaati hai
+    const rotatedWidth =
+        displayedHeight;
+
+    const rotatedHeight =
+        displayedWidth;
+
+    // Player area ko fill karne ke liye scale
+    const scaleX =
+        containerWidth / rotatedWidth;
+
+    const scaleY =
+        containerHeight / rotatedHeight;
+
+    const scale =
+        Math.max(scaleX, scaleY);
+
+    videoPlayer.style.transform =
+        `rotate(${videoRotation}deg) scale(${scale})`;
+}
+
+function resetVideoRotation() {
+
+    videoRotation = 0;
+
+    videoPlayer.style.transform =
+        "rotate(0deg) scale(1)";
+
+}
+
+
+if (rotateVideoBtn) {
+
+    rotateVideoBtn.addEventListener(
+        "click",
+        function () {
+
+            if (!currentMediaFile ||
+                !currentMediaFile.type.startsWith("video/")) {
+                return;
+            }
+
+            videoRotation += 90;
+
+            if (videoRotation >= 360) {
+                videoRotation = 0;
+            }
+
+            applyVideoRotation();
+
+        }
+    );
+
+}
+
+
+window.addEventListener(
+    "resize",
+    function () {
+
+        if (
+            playerModal &&
+            playerModal.classList.contains("show") &&
+            videoRotation % 180 !== 0
+        ) {
+
+            applyVideoRotation();
+
+        }
+
+    }
+);
+
+
+// ==========================================
+// CUSTOM VIDEO CONTROLS
+// ==========================================
+
+const playPauseBtn =
+    document.getElementById("playPauseBtn");
+
+const videoProgress =
+    document.getElementById("videoProgress");
+
+const videoCurrentTime =
+    document.getElementById("videoCurrentTime");
+
+const videoDuration =
+    document.getElementById("videoDuration");
+
+const fullscreenVideoBtn =
+    document.getElementById("fullscreenVideoBtn");
+
+const customVideoControls =
+    document.getElementById("customVideoControls");
+
+
+// ==========================================
+// FORMAT VIDEO TIME
+// ==========================================
+
+function formatVideoTime(seconds) {
+
+    if (
+        !Number.isFinite(seconds)
+    ) {
+
+        return "0:00";
+
+    }
+
+
+    const minutes =
+        Math.floor(seconds / 60);
+
+
+    const remainingSeconds =
+        Math.floor(seconds % 60);
+
+
+    return (
+        minutes +
+        ":" +
+        String(
+            remainingSeconds
+        ).padStart(2, "0")
+    );
+
+}
+
+
+// ==========================================
+// PLAY / PAUSE
+// ==========================================
+
+playPauseBtn.addEventListener(
+    "click",
+    function () {
+
+        if (
+            videoPlayer.paused
+        ) {
+
+            videoPlayer.play();
+
+        }
+
+        else {
+
+            videoPlayer.pause();
+
+        }
+
+    }
+);
+
+
+// ==========================================
+// PLAY STATE
+// ==========================================
+
+videoPlayer.addEventListener(
+    "play",
+    function () {
+
+        playPauseBtn.innerText =
+            "⏸";
+
+    }
+);
+
+
+videoPlayer.addEventListener(
+    "pause",
+    function () {
+
+        playPauseBtn.innerText =
+            "▶";
+
+    }
+);
+
+
+// ==========================================
+// VIDEO TIME UPDATE
+// ==========================================
+
+videoPlayer.addEventListener(
+    "timeupdate",
+    function () {
+
+        if (
+            !videoPlayer.duration
+        ) {
+
+            return;
+
+        }
+
+
+        const progress =
+            (
+                videoPlayer.currentTime /
+                videoPlayer.duration
+            ) * 100;
+
+
+        videoProgress.value =
+            progress;
+
+
+        videoCurrentTime.innerText =
+            formatVideoTime(
+                videoPlayer.currentTime
+            );
+
+    }
+);
+
+
+// ==========================================
+// VIDEO LOADED
+// ==========================================
+
+videoPlayer.addEventListener(
+    "loadedmetadata",
+    function () {
+
+        videoDuration.innerText =
+            formatVideoTime(
+                videoPlayer.duration
+            );
+
+        // Recalculate 90° / 270° scale after the video dimensions are known.
+        if (videoRotation % 180 !== 0) {
+            requestAnimationFrame(applyVideoRotation);
+        }
+
+    }
+);
+
+
+// ==========================================
+// PROGRESS BAR
+// ==========================================
+
+videoProgress.addEventListener(
+    "input",
+    function () {
+
+        if (
+            !videoPlayer.duration
+        ) {
+
+            return;
+
+        }
+
+
+        const newTime =
+            (
+                videoProgress.value /
+                100
+            ) *
+            videoPlayer.duration;
+
+
+        videoPlayer.currentTime =
+            newTime;
+
+    }
+);
+
+
+// ==========================================
+// FULLSCREEN
+// ==========================================
+
+fullscreenVideoBtn.addEventListener(
+    "click",
+    function () {
+
+        toggleFullscreen();
+
+    }
+);
 
 // ==========================================
 // CLOSE PLAYER
 // ==========================================
 
-closePlayer.addEventListener("click", function () {
-
-    closePlayerWindow();
-
-});
+closePlayer.addEventListener(
+    "click",
+    closePlayerWindow
+);
 
 
 function closePlayerWindow() {
 
+    videoRotation = 0;
+
+videoPlayer.style.transform = "rotate(0deg) scale(1)";
+
     videoPlayer.pause();
 
-    videoPlayer.removeAttribute("src");
+    videoPlayer.removeAttribute(
+        "src"
+    );
+
     videoPlayer.load();
 
-    imageViewer.removeAttribute("src");
 
-    playerModal.classList.remove("show");
+    imageViewer.removeAttribute(
+        "src"
+    );
 
-    // Show scrollbar again
-    document.body.classList.remove("watching-media");
+
+    playerModal.classList.remove(
+        "show"
+    );
+
+
+    document.body.classList.remove(
+        "watching-media"
+    );
+
+
+    currentMediaFile =
+        null;
 
 }
 
 
 // ==========================================
-// CLICK OUTSIDE
+// CLICK OUTSIDE PLAYER
 // ==========================================
 
-playerModal.addEventListener("click", function (event) {
+playerModal.addEventListener(
+    "click",
+    function (event) {
 
-    if (event.target === playerModal) {
+        if (
+            event.target === playerModal
+        ) {
 
-        closePlayerWindow();
+            closePlayerWindow();
+
+        }
 
     }
-
-});
+);
 
 
 // ==========================================
 // SEARCH
 // ==========================================
 
-searchInput.addEventListener("input", function () {
-
-    showMedia();
-
-});
+searchInput.addEventListener(
+    "input",
+    showMedia
+);
 
 
 // ==========================================
@@ -1083,84 +1589,118 @@ searchInput.addEventListener("input", function () {
 // ==========================================
 
 const filters =
-    document.querySelectorAll(".filter");
+    document.querySelectorAll(
+        ".filter"
+    );
 
 
-filters.forEach(function (button) {
+filters.forEach(
+    function (button) {
 
-    button.addEventListener("click", function () {
+        button.addEventListener(
+            "click",
+            function () {
 
-
-        filters.forEach(function (btn) {
-
-            btn.classList.remove("active");
-
-        });
-
-
-        button.classList.add("active");
+                currentFilter =
+                    button.dataset.filter;
 
 
-        currentFilter =
-            button.dataset.filter;
+                updateFilterButtons();
 
+                showMedia();
 
-        showMedia();
+            }
+        );
 
-    });
-
-});
+    }
+);
 
 
 // ==========================================
 // SIDEBAR - VIDEOS
 // ==========================================
 
-document
-    .getElementById("videosFilter")
-    .addEventListener("click", function () {
+const videosFilter =
+    document.getElementById(
+        "videosFilter"
+    );
 
-        currentFilter = "video";
 
-        updateFilterButtons();
+if (videosFilter) {
 
-        showMedia();
+    videosFilter.addEventListener(
+        "click",
+        function () {
 
-    });
+            currentFilter =
+                "video";
+
+            updateFilterButtons();
+
+            showMedia();
+
+        }
+    );
+
+}
 
 
 // ==========================================
 // SIDEBAR - IMAGES
 // ==========================================
 
-document
-    .getElementById("imagesFilter")
-    .addEventListener("click", function () {
+const imagesFilter =
+    document.getElementById(
+        "imagesFilter"
+    );
 
-        currentFilter = "image";
 
-        updateFilterButtons();
+if (imagesFilter) {
 
-        showMedia();
+    imagesFilter.addEventListener(
+        "click",
+        function () {
 
-    });
+            currentFilter =
+                "image";
+
+            updateFilterButtons();
+
+            showMedia();
+
+        }
+    );
+
+}
 
 
 // ==========================================
 // SIDEBAR - ALL
 // ==========================================
 
-document
-    .getElementById("allFilter")
-    .addEventListener("click", function () {
+const allFilter =
+    document.getElementById(
+        "allFilter"
+    );
 
-        currentFilter = "all";
 
-        updateFilterButtons();
+if (allFilter) {
 
-        showMedia();
+    allFilter.addEventListener(
+        "click",
+        function () {
 
-    });
+            currentFilter =
+                "all";
+
+            updateFilterButtons();
+
+            showMedia();
+
+        }
+    );
+
+}
 
 
 // ==========================================
@@ -1169,24 +1709,33 @@ document
 
 function updateFilterButtons() {
 
-    filters.forEach(function (button) {
+    filters.forEach(
+        function (button) {
 
-        button.classList.remove("active");
+            button.classList.remove(
+                "active"
+            );
 
 
-        if (
-            button.dataset.filter === currentFilter
-        ) {
+            if (
+                button.dataset.filter ===
+                currentFilter
+            ) {
 
-            button.classList.add("active");
+                button.classList.add(
+                    "active"
+                );
+
+            }
 
         }
-
-    });
+    );
 
 }
+
+
 // ==========================================
-// GET PREVIOUS / NEXT MEDIA
+// SAME TYPE MEDIA
 // ==========================================
 
 function getSameTypeMedia() {
@@ -1198,26 +1747,21 @@ function getSameTypeMedia() {
     }
 
 
-    // If current media is video
-    if (
-        currentMediaFile.type.startsWith("video/")
-    ) {
-
-        return mediaFiles.filter(function (file) {
-
-            return file.type.startsWith("video/");
-
-        });
-
-    }
+    const isVideo =
+        currentMediaFile.type.startsWith(
+            "video/"
+        );
 
 
-    // If current media is image
-    return mediaFiles.filter(function (file) {
+    return mediaFiles.filter(
+        function (file) {
 
-        return file.type.startsWith("image/");
+            return isVideo
+                ? file.type.startsWith("video/")
+                : file.type.startsWith("image/");
 
-    });
+        }
+    );
 
 }
 
@@ -1232,7 +1776,9 @@ function nextMediaFile() {
         getSameTypeMedia();
 
 
-    if (list.length === 0) {
+    if (
+        list.length === 0
+    ) {
 
         return;
 
@@ -1240,22 +1786,27 @@ function nextMediaFile() {
 
 
     const currentIndex =
-        list.indexOf(currentMediaFile);
+        list.indexOf(
+            currentMediaFile
+        );
 
 
     let nextIndex =
         currentIndex + 1;
 
 
-    // If last file → first file
-    if (nextIndex >= list.length) {
+    if (
+        nextIndex >= list.length
+    ) {
 
         nextIndex = 0;
 
     }
 
 
-    openMedia(list[nextIndex]);
+    openMedia(
+        list[nextIndex]
+    );
 
 }
 
@@ -1270,7 +1821,9 @@ function previousMediaFile() {
         getSameTypeMedia();
 
 
-    if (list.length === 0) {
+    if (
+        list.length === 0
+    ) {
 
         return;
 
@@ -1278,15 +1831,18 @@ function previousMediaFile() {
 
 
     const currentIndex =
-        list.indexOf(currentMediaFile);
+        list.indexOf(
+            currentMediaFile
+        );
 
 
     let previousIndex =
         currentIndex - 1;
 
 
-    // If first file → last file
-    if (previousIndex < 0) {
+    if (
+        previousIndex < 0
+    ) {
 
         previousIndex =
             list.length - 1;
@@ -1294,37 +1850,12 @@ function previousMediaFile() {
     }
 
 
-    openMedia(list[previousIndex]);
+    openMedia(
+        list[previousIndex]
+    );
 
 }
 
-
-// ==========================================
-// NEXT BUTTON
-// ==========================================
-
-nextMedia.addEventListener(
-    "click",
-    function () {
-
-        nextMediaFile();
-
-    }
-);
-
-
-// ==========================================
-// PREVIOUS BUTTON
-// ==========================================
-
-previousMedia.addEventListener(
-    "click",
-    function () {
-
-        previousMediaFile();
-
-    }
-);
 
 // ==========================================
 // KEYBOARD CONTROLS
@@ -1336,42 +1867,58 @@ document.addEventListener(
 
         // Player open nahi hai
         if (
-            !playerModal.classList.contains("show")
+            !playerModal.classList.contains(
+                "show"
+            )
         ) {
+
             return;
+
+        }
+
+
+        // Search/text inputs ke andar keyboard shortcuts na chalao.
+        // Progress range ko bhi normal browser keyboard behavior do.
+        if (
+            event.target.tagName === "TEXTAREA" ||
+            (
+                event.target.tagName === "INPUT" &&
+                event.target.id !== "videoProgress"
+            )
+        ) {
+
+            return;
+
         }
 
 
         // ==================================
-        // INPUT / TEXTAREA
+        // SPACE
         // ==================================
 
         if (
-            event.target.tagName === "INPUT" ||
-            event.target.tagName === "TEXTAREA"
+            event.code === "Space"
         ) {
-            return;
-        }
-
-
-        // ==================================
-        // SPACE = PLAY / PAUSE
-        // ==================================
-
-        if (event.code === "Space") {
 
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith("video/")
+                currentMediaFile.type.startsWith(
+                    "video/"
+                )
             ) {
 
                 event.preventDefault();
 
-                if (videoPlayer.paused) {
+
+                if (
+                    videoPlayer.paused
+                ) {
 
                     videoPlayer.play();
 
-                } else {
+                }
+
+                else {
 
                     videoPlayer.pause();
 
@@ -1383,7 +1930,7 @@ document.addEventListener(
 
 
         // ==================================
-        // J = 10 SEC BACKWARD
+        // J = BACKWARD
         // ==================================
 
         else if (
@@ -1392,10 +1939,13 @@ document.addEventListener(
 
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith("video/")
+                currentMediaFile.type.startsWith(
+                    "video/"
+                )
             ) {
 
                 event.preventDefault();
+
 
                 videoPlayer.currentTime =
                     Math.max(
@@ -1409,7 +1959,7 @@ document.addEventListener(
 
 
         // ==================================
-        // L = 10 SEC FORWARD
+        // L = FORWARD
         // ==================================
 
         else if (
@@ -1418,10 +1968,13 @@ document.addEventListener(
 
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith("video/")
+                currentMediaFile.type.startsWith(
+                    "video/"
+                )
             ) {
 
                 event.preventDefault();
+
 
                 videoPlayer.currentTime =
                     Math.min(
@@ -1435,7 +1988,7 @@ document.addEventListener(
 
 
         // ==================================
-        // LEFT ARROW = PREVIOUS
+        // LEFT
         // ==================================
 
         else if (
@@ -1450,7 +2003,7 @@ document.addEventListener(
 
 
         // ==================================
-        // RIGHT ARROW = NEXT
+        // RIGHT
         // ==================================
 
         else if (
@@ -1465,7 +2018,7 @@ document.addEventListener(
 
 
         // ==================================
-        // UP ARROW = SCROLL UP
+        // UP
         // ==================================
 
         else if (
@@ -1473,6 +2026,7 @@ document.addEventListener(
         ) {
 
             event.preventDefault();
+
 
             playerModal.scrollBy({
                 top: -400,
@@ -1483,7 +2037,7 @@ document.addEventListener(
 
 
         // ==================================
-        // DOWN ARROW = SCROLL DOWN
+        // DOWN
         // ==================================
 
         else if (
@@ -1492,6 +2046,7 @@ document.addEventListener(
 
             event.preventDefault();
 
+
             playerModal.scrollBy({
                 top: 400,
                 behavior: "smooth"
@@ -1499,6 +2054,32 @@ document.addEventListener(
 
         }
 
+        // ==================================
+// R = ROTATE
+// ==================================
+
+else if (
+    event.key.toLowerCase() === "r"
+) {
+
+    if (
+        currentMediaFile &&
+        currentMediaFile.type.startsWith("video/")
+    ) {
+
+        event.preventDefault();
+
+        videoRotation += 90;
+
+        if (videoRotation >= 360) {
+            videoRotation = 0;
+        }
+
+        applyVideoRotation();
+
+    }
+
+}
 
         // ==================================
         // F = FULLSCREEN
@@ -1518,46 +2099,55 @@ document.addEventListener(
 );
 
 
-
-
 // ==========================================
 // MORE MEDIA BELOW PLAYER
 // ==========================================
 
-function showMoreMedia(currentFile) {
+function showMoreMedia(
+    currentFile
+) {
 
-    belowMediaGrid.innerHTML = "";
+    belowMediaGrid.innerHTML =
+        "";
 
 
-    // Current file ko hata kar baaki media
     const otherFiles =
-        mediaFiles.filter(function (file) {
+        mediaFiles.filter(
+            function (file) {
 
-            return file !== currentFile;
+                return file !== currentFile;
 
-        });
+            }
+        );
 
 
-    // Maximum 20 files
     const filesToShow =
-        otherFiles.slice(0, 20);
+        otherFiles.slice(
+            0,
+            20
+        );
 
 
-    filesToShow.forEach(function (file) {
+    filesToShow.forEach(
+        function (file) {
 
-        createBelowMediaCard(file);
+            createBelowMediaCard(
+                file
+            );
 
-    });
-
-
+        }
+    );
 
 }
+
 
 // ==========================================
 // CREATE BELOW MEDIA CARD
 // ==========================================
 
-function createBelowMediaCard(file) {
+function createBelowMediaCard(
+    file
+) {
 
     const card =
         document.createElement("div");
@@ -1576,61 +2166,67 @@ function createBelowMediaCard(file) {
 
 
     const url =
-        URL.createObjectURL(file);
+        createMediaURL(file);
 
 
     // ======================================
     // VIDEO
     // ======================================
 
- if (file.type.startsWith("video/")) {
+    if (
+        file.type.startsWith("video/")
+    ) {
 
-    const video =
-        document.createElement("video");
-
-    video.src = url;
-
-    video.muted = true;
-
-    video.playsInline = true;
-
-    video.preload = "metadata";
-
-    video.setAttribute("webkit-playsinline", "");
-
-    thumbnail.appendChild(video);
+        const video =
+            document.createElement("video");
 
 
-    // ==============================
-    // HOVER PREVIEW START
-    // ==============================
+        video.src = url;
 
-    card.addEventListener("mouseenter", function () {
+        video.muted = true;
 
-        video.currentTime = 0;
+        video.playsInline = true;
 
-        video.play().catch(function () {
+        video.preload = "metadata";
 
-            console.log("Recommendation preview blocked");
-
-        });
-
-    });
+        video.setAttribute(
+            "webkit-playsinline",
+            ""
+        );
 
 
-    // ==============================
-    // HOVER PREVIEW STOP
-    // ==============================
+        thumbnail.appendChild(
+            video
+        );
 
-    card.addEventListener("mouseleave", function () {
 
-        video.pause();
+        card.addEventListener(
+            "mouseenter",
+            function () {
 
-        video.currentTime = 0;
+                video.currentTime = 0;
 
-    });
+                video.play().catch(
+                    function () {}
+                );
 
-}
+            }
+        );
+
+
+        card.addEventListener(
+            "mouseleave",
+            function () {
+
+                video.pause();
+
+                video.currentTime = 0;
+
+            }
+        );
+
+    }
+
 
     // ======================================
     // IMAGE
@@ -1646,8 +2242,12 @@ function createBelowMediaCard(file) {
 
         image.alt = file.name;
 
+        image.loading = "lazy";
 
-        thumbnail.appendChild(image);
+
+        thumbnail.appendChild(
+            image
+        );
 
     }
 
@@ -1669,7 +2269,7 @@ function createBelowMediaCard(file) {
 
 
     // ======================================
-    // SIZE
+    // INFO
     // ======================================
 
     const info =
@@ -1680,19 +2280,25 @@ function createBelowMediaCard(file) {
         "below-media-info";
 
 
-    const sizeMB =
-        (file.size / (1024 * 1024)).toFixed(1);
+    const size =
+        formatFileSize(
+            file.size
+        );
 
 
-    if (file.type.startsWith("video/")) {
+    if (
+        file.type.startsWith("video/")
+    ) {
 
         info.innerText =
-            "🎬 Video • " + sizeMB + " MB";
+            "🎬 Video • " + size;
 
-    } else {
+    }
+
+    else {
 
         info.innerText =
-            "🖼 Image • " + sizeMB + " MB";
+            "🖼 Image • " + size;
 
     }
 
@@ -1701,11 +2307,17 @@ function createBelowMediaCard(file) {
     // ADD
     // ======================================
 
-    card.appendChild(thumbnail);
+    card.appendChild(
+        thumbnail
+    );
 
-    card.appendChild(title);
+    card.appendChild(
+        title
+    );
 
-    card.appendChild(info);
+    card.appendChild(
+        info
+    );
 
 
     // ======================================
@@ -1716,15 +2328,20 @@ function createBelowMediaCard(file) {
         "click",
         function () {
 
-            openMedia(file);
+            openMedia(
+                file
+            );
 
         }
     );
 
 
-    belowMediaGrid.appendChild(card);
+    belowMediaGrid.appendChild(
+        card
+    );
 
 }
+
 
 // ==========================================
 // WATCH PAGE LOGO → HOME
@@ -1739,44 +2356,50 @@ watchHomeBtn.addEventListener(
     }
 );
 
+
 // ==========================================
-// FULLSCREEN TOGGLE
+// FULLSCREEN
 // ==========================================
 
 function toggleFullscreen() {
 
-    let fullscreenElement;
+    let fullscreenElement =
+        null;
 
 
-    // ==============================
+    // ======================================
     // VIDEO
-    // ==============================
+    // ======================================
 
     if (
         currentMediaFile &&
-        currentMediaFile.type.startsWith("video/")
+        currentMediaFile.type.startsWith(
+            "video/"
+        )
     ) {
-
-        fullscreenElement = videoPlayer;
+fullscreenElement =
+    document.querySelector(".video-wrapper");
 
     }
 
 
-    // ==============================
+    // ======================================
     // IMAGE
-    // ==============================
+    // ======================================
 
     else if (
         currentMediaFile &&
-        currentMediaFile.type.startsWith("image/")
+        currentMediaFile.type.startsWith(
+            "image/"
+        )
     ) {
 
-        fullscreenElement = imageViewer;
+        fullscreenElement =
+            imageViewer;
 
     }
 
 
-    // Koi media open nahi
     if (!fullscreenElement) {
 
         return;
@@ -1784,29 +2407,33 @@ function toggleFullscreen() {
     }
 
 
-    // ==============================
-    // FULLSCREEN ON
-    // ==============================
+    // ======================================
+    // ENTER FULLSCREEN
+    // ======================================
 
-    if (!document.fullscreenElement) {
+    if (
+        !document.fullscreenElement
+    ) {
 
         fullscreenElement
             .requestFullscreen()
-            .catch(function (error) {
+            .catch(
+                function (error) {
 
-                console.log(
-                    "Fullscreen error:",
-                    error
-                );
+                    console.log(
+                        "Fullscreen error:",
+                        error
+                    );
 
-            });
+                }
+            );
 
     }
 
 
-    // ==============================
-    // FULLSCREEN OFF
-    // ==============================
+    // ======================================
+    // EXIT FULLSCREEN
+    // ======================================
 
     else {
 
@@ -1816,97 +2443,35 @@ function toggleFullscreen() {
 
 }
 
+
+
 // ==========================================
-// RESTORE LAST FOLDER
+// FULLSCREEN CHANGE
+// KEEP VIDEO ROTATION
 // ==========================================
 
-async function restoreLastFolder() {
+document.addEventListener(
+    "fullscreenchange",
+    function () {
 
-    if (
-        !("showDirectoryPicker" in window)
-    ) {
+        if (
+            currentMediaFile &&
+            currentMediaFile.type.startsWith("video/")
+        ) {
 
-        return;
+            // Browser ko fullscreen dimensions update
+            // karne ka time do
+            requestAnimationFrame(function () {
 
-    }
+                requestAnimationFrame(function () {
 
+                    applyVideoRotation();
 
-    try {
+                });
 
-        const folderHandle =
-            await getSavedFolderHandle();
-
-
-        if (!folderHandle) {
-
-            return;
-
-        }
-
-
-        // Check saved permission
-        const permission =
-            await folderHandle.queryPermission({
-                mode: "read"
             });
 
-
-        if (
-            permission !== "granted"
-        ) {
-
-            console.log(
-                "Folder permission required."
-            );
-
-            return;
-
         }
 
-
-        // Read folder again
-        const files =
-            await readFolderFiles(
-                folderHandle
-            );
-
-
-        if (
-            files.length === 0
-        ) {
-
-            return;
-
-        }
-
-
-        mediaFiles = files;
-
-
-        console.log(
-            "Last folder restored:",
-            folderHandle.name
-        );
-
-
-        showMedia();
-
     }
-
-    catch (error) {
-
-        console.log(
-            "Could not restore folder:",
-            error
-        );
-
-    }
-
-}
-
-
-// ==========================================
-// START RESTORE
-// ==========================================
-
-restoreLastFolder();
+);
