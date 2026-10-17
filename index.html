@@ -67,10 +67,34 @@
         <div class="top-section">
             <h2 id="pageTitle">Your Media</h2>
 
-            <div class="filter-buttons">
-                <button class="filter active" data-filter="all">All</button>
-                <button class="filter" data-filter="video">Videos</button>
-                <button class="filter" data-filter="image">Images</button>
+            <div class="top-actions">
+                <div class="filter-buttons">
+                    <button class="filter active" data-filter="all">All</button>
+                    <button class="filter" data-filter="video">Videos</button>
+                    <button class="filter" data-filter="image">Images</button>
+                </div>
+
+                <div class="sort-container">
+                    <button id="sortBtn" class="sort-btn" type="button" aria-expanded="false" aria-controls="sortMenu">
+                        ⇅ Sort <span aria-hidden="true">⌄</span>
+                    </button>
+
+                    <div id="sortMenu" class="sort-menu" hidden>
+                        <label for="sortBy">Sort by</label>
+                        <select id="sortBy">
+                            <option value="name">Name</option>
+                            <option value="date">Date modified</option>
+                            <option value="type">Type</option>
+                            <option value="size">File size</option>
+                        </select>
+
+                        <label for="sortOrder">Order</label>
+                        <select id="sortOrder">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -92,38 +116,17 @@
                     <h3>⌨ Keyboard Controls</h3>
 
                     <div class="home-key-list">
-                        <div class="home-key-item">
-                            <kbd>Space</kbd>
-                            <span>Play / Pause</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>J</kbd>
-                            <span>10 sec Back</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>L</kbd>
-                            <span>10 sec Forward</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>←</kbd>
-                            <span>Previous</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>→</kbd>
-                            <span>Next</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>F</kbd>
-                            <span>Fullscreen</span>
-                        </div>
-                         <div class="home-key-item">
-                            <kbd>R</kbd>
-                            <span>Rotatescreen</span>
-                        </div>
-                         <div class="home-key-item">
-                            <kbd>↑↓</kbd>
-                            <span>Scrollscreen</span>
-                        </div>
+                        <div class="home-key-item"><kbd>Space</kbd><span>Play / Pause</span></div>
+                        <div class="home-key-item"><kbd>J</kbd><span>Seek back 10 seconds</span></div>
+                        <div class="home-key-item"><kbd>K</kbd><span>Seek forword 10 seconds</span></div>
+                        <div class="home-key-item"><kbd>L</kbd><span>Toggle video loop On / Off</span></div>
+                        <div class="home-key-item"><kbd>←</kbd><span>Play previous media of the same type</span></div>
+                        <div class="home-key-item"><kbd>→</kbd><span>Play next media of the same type</span></div>
+                        <div class="home-key-item"><kbd>R</kbd><span>Rotate video 90° clockwise</span></div>
+                        <div class="home-key-item"><kbd>F</kbd><span>Enter / exit fullscreen</span></div>
+                        <div class="home-key-item"><kbd>↑</kbd><span>Scroll watch page up</span></div>
+                        <div class="home-key-item"><kbd>↓</kbd><span>Scroll watch page down</span></div>
+                        <div class="home-key-item"><kbd>Esc</kbd><span>Exit fullscreen (browser shortcut)</span></div>
                     </div>
                 </div>
             </div>
@@ -143,6 +146,26 @@
                     <span class="play-icon">▶</span>
                     <span>LocalTube</span>
                 </button>
+
+                <div class="watch-sort-container">
+                    <button id="watchSortBtn" class="sort-btn" type="button" aria-expanded="false" aria-controls="watchSortMenu">
+                        ⇅ Sort <span aria-hidden="true">⌄</span>
+                    </button>
+                    <div id="watchSortMenu" class="sort-menu watch-sort-menu" hidden>
+                        <label for="watchSortBy">Sort by</label>
+                        <select id="watchSortBy">
+                            <option value="name">Name</option>
+                            <option value="date">Date modified</option>
+                            <option value="type">Type</option>
+                            <option value="size">File size</option>
+                        </select>
+                        <label for="watchSortOrder">Order</label>
+                        <select id="watchSortOrder">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="watch-content">
@@ -191,11 +214,39 @@
                         <span id="videoDuration">0:00</span>
 
                         <button
+                            id="loopVideoBtn"
+                            class="loop-video-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            title="Loop this video"
+                        >
+                            🔁 Loop: Off
+                        </button>
+
+                        <button
                             id="rotateVideoBtn"
                             type="button"
                             title="Rotate Video"
                         >
                             🔄 Rotate
+                        </button>
+                        <button
+                            id="rotateNextToggleBtn"
+                            class="rotate-next-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            title="Keep this rotation for the next video"
+                        >
+                            ↪ Rotate Next: Off
+                        </button>
+                        <button
+                            id="autoPlayToggleBtn"
+                            class="autoplay-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            title="Automatically play the next video when this video ends"
+                        >
+                            ▶ Auto Play: Off
                         </button>
 
                         <button

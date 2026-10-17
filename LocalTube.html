@@ -3027,17 +3027,430 @@ body.watching-media .recommendations::-webkit-scrollbar {
         font-size: 11px;
     }
 }
+
+
+/* =========================================================
+   SORT MENU — beside All / Videos / Images
+   ========================================================= */
+.top-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sort-container {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 8px 13px;
+    color: #eee;
+    background: #272727;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.sort-btn:hover,
+.sort-btn[aria-expanded="true"] {
+    background: #383838;
+}
+
+.sort-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 300;
+    width: 230px;
+    padding: 16px;
+    background: #202020;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.sort-menu[hidden] {
+    display: none !important;
+}
+
+.sort-menu label {
+    display: block;
+    margin: 0 0 7px;
+    color: #ccc;
+    font-size: 12px;
+}
+
+.sort-menu select {
+    width: 100%;
+    min-height: 38px;
+    margin: 0 0 14px;
+    padding: 8px 10px;
+    color: #fff;
+    background: #111;
+    border: 1px solid #444;
+    border-radius: 7px;
+    outline: none;
+}
+
+.sort-menu select:last-child {
+    margin-bottom: 0;
+}
+
+.sort-menu select:focus {
+    border-color: #3ea6ff;
+}
+
+@media (max-width: 650px) {
+    .top-section {
+        align-items: flex-start;
+        gap: 12px;
+        flex-direction: column;
+    }
+
+    .top-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .filter-buttons {
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .filter {
+        padding: 8px 10px;
+    }
+}
+
+
+/* AUTO PLAY TOGGLE BESIDE VIDEO CONTROLS */
+.custom-video-controls .autoplay-toggle {
+    flex: 0 0 auto;
+    border: 1px solid #444;
+    background: #252525;
+    color: #eee;
+    padding: 8px 11px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 13px;
+}
+.custom-video-controls .autoplay-toggle:hover { background: #333; }
+.custom-video-controls .autoplay-toggle.is-on {
+    background: #e5e5e5; color: #111; border-color: #e5e5e5;
+}
+.custom-video-controls .autoplay-toggle:focus-visible {
+    outline: 2px solid #3ea6ff; outline-offset: 2px;
+}
+@media (max-width: 700px) {
+    .custom-video-controls .autoplay-toggle { padding: 7px 8px; font-size: 11px; }
+}
+
+
+/* =========================================================
+   FINAL ROTATION + FULLSCREEN + ROTATE-NEXT FIX
+   ========================================================= */
+.watch-page .main-video {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+.watch-page .video-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+.watch-page #videoPlayer {
+    display: block !important;
+    flex: 0 0 auto !important;
+    object-fit: contain !important;
+    transform-origin: center center !important;
+    transition: transform 0.22s ease !important;
+    background: #000 !important;
+}
 .video-wrapper:fullscreen {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
 }
 .video-wrapper:fullscreen #videoPlayer {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
+    object-fit: contain !important;
 }
+.custom-video-controls .rotate-next-toggle {
+    flex: 0 0 auto;
+    border: 1px solid #444;
+    background: #252525;
+    color: #eee;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 12px;
+}
+.custom-video-controls .rotate-next-toggle:hover { background: #333; }
+.custom-video-controls .rotate-next-toggle.is-on {
+    background: #e5e5e5;
+    color: #111;
+    border-color: #e5e5e5;
+}
+@media (max-width: 850px) {
+    .custom-video-controls { gap: 5px !important; flex-wrap: wrap; }
+    .custom-video-controls #videoProgress { min-width: 60px; }
+    .custom-video-controls .rotate-next-toggle { padding: 7px 8px; font-size: 11px; }
+}
+
+
+/* FINAL ROTATION + FULLSCREEN FIX */
+.video-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #000 !important;
+}
+
+#videoPlayer {
+    display: block !important;
+    flex: 0 0 auto !important;
+    object-fit: contain !important;
+    transform-origin: center center !important;
+    transition: transform 0.22s ease !important;
+    background: #000 !important;
+    controls: none;
+}
+
+.video-wrapper:fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+
+.video-wrapper:fullscreen #videoPlayer {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+
+/* Rotation fill fix: clip overflow to the fixed player viewport. */
+.watch-page .video-wrapper {
+    overflow: hidden !important;
+    isolation: isolate;
+}
+.watch-page #videoPlayer {
+    object-fit: contain !important;
+}
+.video-wrapper:fullscreen #videoPlayer {
+    object-fit: contain !important;
+}
+
+
+/* Final repair: keep Sort visible on the home library and watch page. */
+body:not(.watching-media) .main .top-section {
+    display: flex !important;
+    visibility: visible !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+body:not(.watching-media) .main .top-actions {
+    display: flex !important;
+    visibility: visible !important;
+}
+.sort-container, .watch-sort-container {
+    position: relative;
+    flex: 0 0 auto;
+}
+.watch-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.watch-sort-container { margin-left: auto; }
+.watch-sort-menu { top: calc(100% + 8px); right: 0; }
+
+/* Fullscreen the custom player panel rather than the video element. */
+.watch-main:fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18px 22px 12px !important;
+    box-sizing: border-box !important;
+    background: #000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center;
+    overflow: hidden !important;
+}
+.watch-main:fullscreen .main-video {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    display: flex !important;
+    position: relative !important;
+}
+.watch-main:fullscreen .video-wrapper {
+    flex: 1 1 auto;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden !important;
+    position: relative !important;
+    background: #000 !important;
+}
+.watch-main:fullscreen #playerTitle {
+    flex: 0 0 auto;
+    max-height: 2.5em;
+    overflow: hidden;
+}
+.watch-main:fullscreen .custom-video-controls {
+    flex: 0 0 auto;
+    width: 100%;
+}
+.watch-main:fullscreen .media-details { flex: 0 0 auto; }
+.watch-main:fullscreen .close-btn { z-index: 99999; }
+
+@media (max-width: 700px) {
+    .watch-sort-container .sort-btn { padding: 7px 10px; }
+    .watch-main:fullscreen { padding: 10px !important; }
+}
+
+
+/* FINAL PATCH v4: rotation sizing must override older !important rules. */
+.watch-page #videoPlayer {
+    transform-origin: center center !important;
+}
+
+/* In fullscreen show the video only. Keep the close button available. */
+.watch-main:fullscreen .custom-video-controls,
+.watch-main:fullscreen #playerTitle,
+.watch-main:fullscreen .media-details {
+    display: none !important;
+}
+
+.watch-main:fullscreen .main-video {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+}
+
+.watch-main:fullscreen .video-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+
+.watch-main:fullscreen #videoPlayer {
+    object-fit: contain;
+}
+
+/* Keep the home-page Sort control visible alongside filters. */
+.main > .top-section,
+.main > .top-section .top-actions {
+    display: flex !important;
+    visibility: visible !important;
+}
+.main > .top-section {
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+
+/* FINAL PATCH v5: keep Sort and Close buttons separated. */
+.watch-header {
+    position: relative;
+    padding-right: 76px;
+    box-sizing: border-box;
+}
+.watch-sort-container {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+/* In fullscreen, the Close button appears on pointer activity and fades away. */
+.watch-main:fullscreen .close-btn {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.watch-main:fullscreen.fullscreen-controls-hidden .close-btn {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+
+/* FINAL PATCH v7: Loop toggle button matches the existing video controls. */
+#loopVideoBtn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+#loopVideoBtn.is-on {
+    background: #f1f1f1;
+    color: #111;
+    border-color: #f1f1f1;
+}
+.home-keyboard-guide {
+    max-height: 75vh;
+    overflow-y: auto;
+}
+@media (max-width: 900px) {
+    #loopVideoBtn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
     </style>
 </head>
 
@@ -3100,10 +3513,34 @@ body.watching-media .recommendations::-webkit-scrollbar {
         <div class="top-section">
             <h2 id="pageTitle">Your Media</h2>
 
-            <div class="filter-buttons">
-                <button class="filter active" data-filter="all">All</button>
-                <button class="filter" data-filter="video">Videos</button>
-                <button class="filter" data-filter="image">Images</button>
+            <div class="top-actions">
+                <div class="filter-buttons">
+                    <button class="filter active" data-filter="all">All</button>
+                    <button class="filter" data-filter="video">Videos</button>
+                    <button class="filter" data-filter="image">Images</button>
+                </div>
+
+                <div class="sort-container">
+                    <button id="sortBtn" class="sort-btn" type="button" aria-expanded="false" aria-controls="sortMenu">
+                        ⇅ Sort <span aria-hidden="true">⌄</span>
+                    </button>
+
+                    <div id="sortMenu" class="sort-menu" hidden>
+                        <label for="sortBy">Sort by</label>
+                        <select id="sortBy">
+                            <option value="name">Name</option>
+                            <option value="date">Date modified</option>
+                            <option value="type">Type</option>
+                            <option value="size">File size</option>
+                        </select>
+
+                        <label for="sortOrder">Order</label>
+                        <select id="sortOrder">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3125,38 +3562,17 @@ body.watching-media .recommendations::-webkit-scrollbar {
                     <h3>⌨ Keyboard Controls</h3>
 
                     <div class="home-key-list">
-                        <div class="home-key-item">
-                            <kbd>Space</kbd>
-                            <span>Play / Pause</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>J</kbd>
-                            <span>10 sec Back</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>L</kbd>
-                            <span>10 sec Forward</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>←</kbd>
-                            <span>Previous</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>→</kbd>
-                            <span>Next</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>F</kbd>
-                            <span>Fullscreen</span>
-                        </div>
-                        <div class="home-key-item">
-                            <kbd>R</kbd>
-                            <span>Rotatescreen</span>
-                        </div>
-                         <div class="home-key-item">
-                            <kbd>↑↓</kbd>
-                            <span>Scrollscreen</span>
-                        </div>
+                        <div class="home-key-item"><kbd>Space</kbd><span>Play / Pause</span></div>
+                        <div class="home-key-item"><kbd>J</kbd><span>Seek back 10 seconds</span></div>
+                        <div class="home-key-item"><kbd>K</kbd><span>Seek forword 10 seconds</span></div>
+                        <div class="home-key-item"><kbd>L</kbd><span>Toggle video loop On / Off</span></div>
+                        <div class="home-key-item"><kbd>←</kbd><span>Play previous media of the same type</span></div>
+                        <div class="home-key-item"><kbd>→</kbd><span>Play next media of the same type</span></div>
+                        <div class="home-key-item"><kbd>R</kbd><span>Rotate video 90° clockwise</span></div>
+                        <div class="home-key-item"><kbd>F</kbd><span>Enter / exit fullscreen</span></div>
+                        <div class="home-key-item"><kbd>↑</kbd><span>Scroll watch page up</span></div>
+                        <div class="home-key-item"><kbd>↓</kbd><span>Scroll watch page down</span></div>
+                        <div class="home-key-item"><kbd>Esc</kbd><span>Exit fullscreen (browser shortcut)</span></div>
                     </div>
                 </div>
             </div>
@@ -3176,6 +3592,26 @@ body.watching-media .recommendations::-webkit-scrollbar {
                     <span class="play-icon">▶</span>
                     <span>LocalTube</span>
                 </button>
+
+                <div class="watch-sort-container">
+                    <button id="watchSortBtn" class="sort-btn" type="button" aria-expanded="false" aria-controls="watchSortMenu">
+                        ⇅ Sort <span aria-hidden="true">⌄</span>
+                    </button>
+                    <div id="watchSortMenu" class="sort-menu watch-sort-menu" hidden>
+                        <label for="watchSortBy">Sort by</label>
+                        <select id="watchSortBy">
+                            <option value="name">Name</option>
+                            <option value="date">Date modified</option>
+                            <option value="type">Type</option>
+                            <option value="size">File size</option>
+                        </select>
+                        <label for="watchSortOrder">Order</label>
+                        <select id="watchSortOrder">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="watch-content">
@@ -3224,11 +3660,39 @@ body.watching-media .recommendations::-webkit-scrollbar {
                         <span id="videoDuration">0:00</span>
 
                         <button
+                            id="loopVideoBtn"
+                            class="loop-video-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            title="Loop this video"
+                        >
+                            🔁 Loop: Off
+                        </button>
+
+                        <button
                             id="rotateVideoBtn"
                             type="button"
                             title="Rotate Video"
                         >
                             🔄 Rotate
+                        </button>
+                        <button
+                            id="rotateNextToggleBtn"
+                            class="rotate-next-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            title="Keep this rotation for the next video"
+                        >
+                            ↪ Rotate Next: Off
+                        </button>
+                        <button
+                            id="autoPlayToggleBtn"
+                            class="autoplay-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            title="Automatically play the next video when this video ends"
+                        >
+                            ▶ Auto Play: Off
                         </button>
 
                         <button
@@ -3278,6 +3742,10 @@ const selectFolderEmpty = document.getElementById("selectFolderEmpty");
 
 const mediaGrid = document.getElementById("mediaGrid");
 const searchInput = document.getElementById("searchInput");
+const sortBtn = document.getElementById("sortBtn");
+const sortMenu = document.getElementById("sortMenu");
+const sortBy = document.getElementById("sortBy");
+const sortOrder = document.getElementById("sortOrder");
 
 const playerModal = document.getElementById("playerModal");
 const videoPlayer = document.getElementById("videoPlayer");
@@ -3302,6 +3770,8 @@ const watchHomeBtn =
     document.getElementById("watchHomeBtn");
 const rotateVideoBtn =
     document.getElementById("rotateVideoBtn");
+const rotateNextToggleBtn =
+    document.getElementById("rotateNextToggleBtn");
 
 
 // ==========================================
@@ -3313,8 +3783,11 @@ let mediaFiles = [];
 let currentMediaFile = null;
 
 let currentFilter = "all";
+let currentSort = "name";
+let currentSortOrder = "asc";
 
 let videoRotation = 0;
+let rotateNextEnabled = false;
 
 
 
@@ -3657,6 +4130,47 @@ if (folderInput) {
 
 
 // ==========================================
+// SORT MEDIA FILES
+// ==========================================
+
+function sortMediaFiles(files) {
+    const sortedFiles = [...files];
+    const direction = currentSortOrder === "asc" ? 1 : -1;
+
+    sortedFiles.sort(function (a, b) {
+        let result = 0;
+
+        if (currentSort === "name") {
+            result = a.name.localeCompare(b.name, undefined, {
+                numeric: true,
+                sensitivity: "base"
+            });
+        } else if (currentSort === "date") {
+            result = (a.lastModified || 0) - (b.lastModified || 0);
+        } else if (currentSort === "size") {
+            result = (a.size || 0) - (b.size || 0);
+        } else if (currentSort === "type") {
+            const typeA = a.type || getMediaType(a.name);
+            const typeB = b.type || getMediaType(b.name);
+            result = typeA.localeCompare(typeB, undefined, { sensitivity: "base" });
+            if (result === 0) {
+                result = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+            }
+        }
+
+        return result * direction;
+    });
+
+    return sortedFiles;
+}
+
+function getMediaType(fileName) {
+    const extension = (fileName.split(".").pop() || "").toLowerCase();
+    const videoExtensions = ["mp4", "m4v", "webm", "ogv", "ogg", "mov", "avi", "mkv", "3gp", "mpeg", "mpg", "wmv", "flv"];
+    return videoExtensions.includes(extension) ? "video" : "image";
+}
+
+// ==========================================
 // SHOW MEDIA
 // ==========================================
 
@@ -3726,6 +4240,9 @@ function showMedia() {
 
     }
 
+
+    // Sort the filtered + searched results.
+    filteredFiles = sortMediaFiles(filteredFiles);
 
     // ======================================
     // EMPTY
@@ -3989,6 +4506,102 @@ function createMediaCard(file) {
 
 
 // ==========================================
+// SORT MENU EVENTS
+// ==========================================
+
+if (sortBtn && sortMenu) {
+    sortBtn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        const isOpening = sortMenu.hidden;
+        sortMenu.hidden = !isOpening;
+        sortBtn.setAttribute("aria-expanded", String(isOpening));
+    });
+
+    sortMenu.addEventListener("click", function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener("click", function () {
+        sortMenu.hidden = true;
+        sortBtn.setAttribute("aria-expanded", "false");
+        if (watchSortMenu) watchSortMenu.hidden = true;
+        if (watchSortBtn) watchSortBtn.setAttribute("aria-expanded", "false");
+    });
+}
+
+if (sortBy) {
+    sortBy.addEventListener("change", function () {
+        currentSort = sortBy.value;
+        showMedia();
+    });
+}
+
+if (sortOrder) {
+    sortOrder.addEventListener("change", function () {
+        currentSortOrder = sortOrder.value;
+        showMedia();
+    });
+}
+
+// Watch-page sort button shares the same sort settings as the home screen.
+const watchSortBtn = document.getElementById("watchSortBtn");
+const watchSortMenu = document.getElementById("watchSortMenu");
+const watchSortBy = document.getElementById("watchSortBy");
+const watchSortOrder = document.getElementById("watchSortOrder");
+
+function syncSortControls() {
+    if (sortBy) sortBy.value = currentSort;
+    if (watchSortBy) watchSortBy.value = currentSort;
+    if (sortOrder) sortOrder.value = currentSortOrder;
+    if (watchSortOrder) watchSortOrder.value = currentSortOrder;
+}
+
+function applySortChoice(by, order) {
+    if (by) currentSort = by;
+    if (order) currentSortOrder = order;
+    syncSortControls();
+    showMedia();
+    if (currentMediaFile) {
+        showRecommendations(currentMediaFile);
+        showMoreMedia(currentMediaFile);
+    }
+}
+
+if (watchSortBtn && watchSortMenu) {
+    watchSortBtn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        const opening = watchSortMenu.hidden;
+        watchSortMenu.hidden = !opening;
+        watchSortBtn.setAttribute("aria-expanded", String(opening));
+    });
+    watchSortMenu.addEventListener("click", function (event) {
+        event.stopPropagation();
+    });
+}
+
+if (watchSortBy) {
+    watchSortBy.addEventListener("change", function () {
+        applySortChoice(watchSortBy.value, currentSortOrder);
+    });
+}
+if (watchSortOrder) {
+    watchSortOrder.addEventListener("change", function () {
+        applySortChoice(currentSort, watchSortOrder.value);
+    });
+}
+if (sortBy) {
+    sortBy.addEventListener("change", function () {
+        applySortChoice(sortBy.value, currentSortOrder);
+    });
+}
+if (sortOrder) {
+    sortOrder.addEventListener("change", function () {
+        applySortChoice(currentSort, sortOrder.value);
+    });
+}
+
+
+// ==========================================
 // FILE SIZE
 // ==========================================
 
@@ -4010,13 +4623,22 @@ function formatFileSize(bytes) {
 // OPEN MEDIA
 // ==========================================
 
-function openMedia(file) {
+function openMedia(file, preserveRotation = false) {
 
-    currentMediaFile =
-        file;
+    const previousRotation = videoRotation;
+    const previousWasVideo = !!currentMediaFile &&
+        currentMediaFile.type.startsWith("video/");
 
-    // Every newly opened media starts at normal orientation.
-    resetVideoRotation();
+    currentMediaFile = file;
+
+    // Keep the same angle only when the user enabled Rotate Next and
+    // another video is being opened through next/previous navigation.
+    if (preserveRotation && rotateNextEnabled && previousWasVideo &&
+        file.type.startsWith("video/")) {
+        videoRotation = previousRotation;
+    } else {
+        resetVideoRotation();
+    }
 
 
     const url =
@@ -4086,14 +4708,15 @@ function openMedia(file) {
             videoDuration.innerText = "0:00";
         }
 
-        videoPlayer.src =
-            url;
+        videoPlayer.autoplay = true;
+        videoPlayer.playsInline = true;
+        videoPlayer.src = url;
+        videoPlayer.load();
 
+        videoPlayer.muted = false;
+        updateLoopToggle();
 
-        videoPlayer.muted =
-            false;
-
-
+        // Opening a media card is a user gesture, so try to start playback immediately.
         videoPlayer.play().catch(
             function (error) {
 
@@ -4172,13 +4795,13 @@ function showRecommendations(
 
 
     const recommendations =
-        mediaFiles.filter(
+        sortMediaFiles(mediaFiles.filter(
             function (file) {
 
                 return file !== currentFile;
 
             }
-        );
+        ));
 
 
     const limited =
@@ -4412,134 +5035,94 @@ function createRecommendation(
 // ==========================================
 
 function applyVideoRotation() {
+    if (!videoPlayer) return;
 
-    if (!videoPlayer) {
-        return;
-    }
+    const wrapper = document.querySelector(".video-wrapper");
+    if (!wrapper) return;
 
-    const container =
-        document.querySelector(".video-wrapper");
+    const boxWidth = wrapper.clientWidth;
+    const boxHeight = wrapper.clientHeight;
+    if (!boxWidth || !boxHeight) return;
 
-    if (!container) {
-        return;
-    }
+    // Never use the browser's built-in video controls; LocalTube has its own.
+    videoPlayer.controls = false;
+    videoPlayer.removeAttribute("controls");
+    videoPlayer.style.transformOrigin = "center center";
+    videoPlayer.style.transition = "transform 0.22s ease, width 0.22s ease, height 0.22s ease";
+    videoPlayer.style.flex = "0 0 auto";
 
-    // Video ki original dimensions
-    const videoWidth =
-        videoPlayer.videoWidth;
-
-    const videoHeight =
-        videoPlayer.videoHeight;
-
-    if (!videoWidth || !videoHeight) {
-        return;
-    }
-
-    const containerWidth =
-        container.clientWidth;
-
-    const containerHeight =
-        container.clientHeight;
-
-    if (!containerWidth || !containerHeight) {
-        return;
-    }
-
-    // Video ka original aspect ratio
-    const videoRatio =
-        videoWidth / videoHeight;
-
-    const containerRatio =
-        containerWidth / containerHeight;
-
-    // Object-fit: contain ke according
-    // video ka actual displayed size calculate karo
-    let displayedWidth;
-    let displayedHeight;
-
-    if (videoRatio > containerRatio) {
-
-        displayedWidth =
-            containerWidth;
-
-        displayedHeight =
-            containerWidth / videoRatio;
-
-    } else {
-
-        displayedHeight =
-            containerHeight;
-
-        displayedWidth =
-            containerHeight * videoRatio;
-
-    }
-
-    // Normal orientation
+    // 0°/180°: keep the regular frame fitting inside the player.
     if (videoRotation % 180 === 0) {
-
-        videoPlayer.style.transform =
-            `rotate(${videoRotation}deg)`;
-
+        videoPlayer.style.position = "relative";
+        videoPlayer.style.left = "auto";
+        videoPlayer.style.top = "auto";
+        videoPlayer.style.setProperty("width", "100%", "important");
+        videoPlayer.style.setProperty("height", "100%", "important");
+        videoPlayer.style.setProperty("max-width", "100%", "important");
+        videoPlayer.style.setProperty("max-height", "100%", "important");
+        videoPlayer.style.setProperty("object-fit", "contain", "important");
+        videoPlayer.style.transform = `rotate(${videoRotation}deg)`;
         return;
     }
 
-    // 90° / 270°
-    // Rotation ke baad width/height swap ho jaati hai
-    const rotatedWidth =
-        displayedHeight;
-
-    const rotatedHeight =
-        displayedWidth;
-
-    // Player area ko fill karne ke liye scale
-    const scaleX =
-        containerWidth / rotatedWidth;
-
-    const scaleY =
-        containerHeight / rotatedHeight;
-
-    const scale =
-        Math.max(scaleX, scaleY);
-
-    videoPlayer.style.transform =
-        `rotate(${videoRotation}deg) scale(${scale})`;
+    // 90°/270°: swap the unrotated box dimensions. Once rotated, its
+    // bounding box matches the player area. COVER fills that area; cropping
+    // at the edges is expected when the video's aspect ratio differs.
+    videoPlayer.style.position = "absolute";
+    videoPlayer.style.left = "50%";
+    videoPlayer.style.top = "50%";
+    videoPlayer.style.setProperty("width", `${boxHeight}px`, "important");
+    videoPlayer.style.setProperty("height", `${boxWidth}px`, "important");
+    videoPlayer.style.setProperty("max-width", "none", "important");
+    videoPlayer.style.setProperty("max-height", "none", "important");
+    videoPlayer.style.setProperty("object-fit", "cover", "important");
+    videoPlayer.style.transform = `translate(-50%, -50%) rotate(${videoRotation}deg)`;
 }
 
 function resetVideoRotation() {
-
     videoRotation = 0;
-
-    videoPlayer.style.transform =
-        "rotate(0deg) scale(1)";
-
+    if (!videoPlayer) return;
+    videoPlayer.style.position = "relative";
+    videoPlayer.style.left = "auto";
+    videoPlayer.style.top = "auto";
+    videoPlayer.style.width = "100%";
+    videoPlayer.style.height = "100%";
+    videoPlayer.style.setProperty("max-width", "100%", "important");
+    videoPlayer.style.setProperty("max-height", "100%", "important");
+    videoPlayer.style.setProperty("object-fit", "contain", "important");
+    videoPlayer.style.transform = "rotate(0deg)";
 }
 
+function rotateVideoRight() {
+    if (!currentMediaFile || !currentMediaFile.type.startsWith("video/")) return;
+
+    // Requested order: first press turns right to 270°, then 180°, 90°, 0°.
+    videoRotation = videoRotation === 0 ? 270 :
+        videoRotation === 270 ? 180 :
+        videoRotation === 180 ? 90 : 0;
+    applyVideoRotation();
+}
+
+function updateRotateNextButton() {
+    if (!rotateNextToggleBtn) return;
+    rotateNextToggleBtn.textContent = rotateNextEnabled
+        ? "↪ Rotate Next: On"
+        : "↪ Rotate Next: Off";
+    rotateNextToggleBtn.setAttribute("aria-pressed", String(rotateNextEnabled));
+    rotateNextToggleBtn.classList.toggle("is-on", rotateNextEnabled);
+}
+
+if (rotateNextToggleBtn) {
+    rotateNextToggleBtn.addEventListener("click", function () {
+        rotateNextEnabled = !rotateNextEnabled;
+        updateRotateNextButton();
+    });
+    updateRotateNextButton();
+}
 
 if (rotateVideoBtn) {
-
-    rotateVideoBtn.addEventListener(
-        "click",
-        function () {
-
-            if (!currentMediaFile ||
-                !currentMediaFile.type.startsWith("video/")) {
-                return;
-            }
-
-            videoRotation += 90;
-
-            if (videoRotation >= 360) {
-                videoRotation = 0;
-            }
-
-            applyVideoRotation();
-
-        }
-    );
-
+    rotateVideoBtn.addEventListener("click", rotateVideoRight);
 }
-
 
 window.addEventListener(
     "resize",
@@ -4548,7 +5131,7 @@ window.addEventListener(
         if (
             playerModal &&
             playerModal.classList.contains("show") &&
-            videoRotation % 180 !== 0
+            videoRotation !== 0
         ) {
 
             applyVideoRotation();
@@ -4580,6 +5163,44 @@ const fullscreenVideoBtn =
 
 const customVideoControls =
     document.getElementById("customVideoControls");
+const autoPlayToggleBtn = document.getElementById("autoPlayToggleBtn");
+const loopVideoBtn = document.getElementById("loopVideoBtn");
+let autoPlayNextEnabled = false;
+
+function updateLoopToggle() {
+    if (!loopVideoBtn) return;
+    loopVideoBtn.textContent = videoPlayer.loop ? "🔁 Loop: On" : "🔁 Loop: Off";
+    loopVideoBtn.setAttribute("aria-pressed", String(videoPlayer.loop));
+    loopVideoBtn.classList.toggle("is-on", videoPlayer.loop);
+}
+
+function toggleVideoLoop() {
+    if (!currentMediaFile || !currentMediaFile.type.startsWith("video/")) return;
+    videoPlayer.loop = !videoPlayer.loop;
+    updateLoopToggle();
+}
+
+if (loopVideoBtn) {
+    loopVideoBtn.addEventListener("click", toggleVideoLoop);
+    updateLoopToggle();
+}
+
+function updateAutoPlayToggle() {
+    if (!autoPlayToggleBtn) return;
+    autoPlayToggleBtn.textContent = autoPlayNextEnabled
+        ? "▶ Auto Play: On"
+        : "▶ Auto Play: Off";
+    autoPlayToggleBtn.setAttribute("aria-pressed", String(autoPlayNextEnabled));
+    autoPlayToggleBtn.classList.toggle("is-on", autoPlayNextEnabled);
+}
+
+if (autoPlayToggleBtn) {
+    autoPlayToggleBtn.addEventListener("click", function () {
+        autoPlayNextEnabled = !autoPlayNextEnabled;
+        updateAutoPlayToggle();
+    });
+    updateAutoPlayToggle();
+}
 
 
 // ==========================================
@@ -4668,6 +5289,14 @@ videoPlayer.addEventListener(
 );
 
 
+// Automatically open the next video only when Auto Play is turned ON.
+videoPlayer.addEventListener("ended", function () {
+    if (!autoPlayNextEnabled || !currentMediaFile) return;
+    if (!currentMediaFile.type.startsWith("video/")) return;
+    nextMediaFile();
+});
+
+
 // ==========================================
 // VIDEO TIME UPDATE
 // ==========================================
@@ -4719,7 +5348,7 @@ videoPlayer.addEventListener(
             );
 
         // Recalculate 90° / 270° scale after the video dimensions are known.
-        if (videoRotation % 180 !== 0) {
+        if (videoRotation !== 0) {
             requestAnimationFrame(applyVideoRotation);
         }
 
@@ -4763,14 +5392,9 @@ videoProgress.addEventListener(
 // FULLSCREEN
 // ==========================================
 
-fullscreenVideoBtn.addEventListener(
-    "click",
-    function () {
-
-        toggleFullscreen();
-
-    }
-);
+if (fullscreenVideoBtn) {
+    fullscreenVideoBtn.addEventListener("click", toggleFullscreen);
+}
 
 // ==========================================
 // CLOSE PLAYER
@@ -4784,37 +5408,40 @@ closePlayer.addEventListener(
 
 function closePlayerWindow() {
 
+    // If the watch player is fullscreen, exit fullscreen BEFORE hiding it.
+    // Hiding a fullscreen element first can leave the browser stuck in fullscreen.
+    if (document.fullscreenElement) {
+        document.exitFullscreen()
+            .catch(function (error) {
+                console.warn("Could not exit fullscreen cleanly:", error);
+            })
+            .finally(finishClosePlayer);
+        return;
+    }
+
+    finishClosePlayer();
+}
+
+function finishClosePlayer() {
+
     videoRotation = 0;
-
-videoPlayer.style.transform = "rotate(0deg) scale(1)";
-
+    videoPlayer.style.transform = "rotate(0deg) scale(1)";
     videoPlayer.pause();
-
-    videoPlayer.removeAttribute(
-        "src"
-    );
-
+    videoPlayer.removeAttribute("src");
     videoPlayer.load();
 
+    imageViewer.removeAttribute("src");
 
-    imageViewer.removeAttribute(
-        "src"
-    );
+    playerModal.classList.remove("show");
+    document.body.classList.remove("watching-media");
 
+    // Reset fullscreen-only UI state for the next time the player opens.
+    const watchMain = document.querySelector(".watch-main");
+    if (watchMain) {
+        watchMain.classList.remove("fullscreen-controls-hidden");
+    }
 
-    playerModal.classList.remove(
-        "show"
-    );
-
-
-    document.body.classList.remove(
-        "watching-media"
-    );
-
-
-    currentMediaFile =
-        null;
-
+    currentMediaFile = null;
 }
 
 
@@ -5017,7 +5644,7 @@ function getSameTypeMedia() {
         );
 
 
-    return mediaFiles.filter(
+    return sortMediaFiles(mediaFiles.filter(
         function (file) {
 
             return isVideo
@@ -5025,7 +5652,7 @@ function getSameTypeMedia() {
                 : file.type.startsWith("image/");
 
         }
-    );
+    ));
 
 }
 
@@ -5069,7 +5696,8 @@ function nextMediaFile() {
 
 
     openMedia(
-        list[nextIndex]
+        list[nextIndex],
+        rotateNextEnabled
     );
 
 }
@@ -5115,7 +5743,8 @@ function previousMediaFile() {
 
 
     openMedia(
-        list[previousIndex]
+        list[previousIndex],
+        rotateNextEnabled
     );
 
 }
@@ -5223,31 +5852,34 @@ document.addEventListener(
 
 
         // ==================================
-        // L = FORWARD
+        // K = FORWARD 10 SECONDS
         // ==================================
 
-        else if (
-            event.key.toLowerCase() === "l"
-        ) {
-
+        else if (event.key.toLowerCase() === "k") {
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith(
-                    "video/"
-                )
+                currentMediaFile.type.startsWith("video/")
             ) {
-
                 event.preventDefault();
-
-
-                videoPlayer.currentTime =
-                    Math.min(
-                        videoPlayer.duration || Infinity,
-                        videoPlayer.currentTime + 10
-                    );
-
+                videoPlayer.currentTime = Math.min(
+                    videoPlayer.duration || Infinity,
+                    videoPlayer.currentTime + 10
+                );
             }
+        }
 
+        // ==================================
+        // L = TOGGLE VIDEO LOOP
+        // ==================================
+
+        else if (event.key.toLowerCase() === "l") {
+            if (
+                currentMediaFile &&
+                currentMediaFile.type.startsWith("video/")
+            ) {
+                event.preventDefault();
+                toggleVideoLoop();
+            }
         }
 
 
@@ -5318,32 +5950,15 @@ document.addEventListener(
 
         }
 
+
         // ==================================
-// R = ROTATE
-// ==================================
+        // R = ROTATE CLOCKWISE (RIGHT)
+        // ==================================
 
-else if (
-    event.key.toLowerCase() === "r"
-) {
-
-    if (
-        currentMediaFile &&
-        currentMediaFile.type.startsWith("video/")
-    ) {
-
-        event.preventDefault();
-
-        videoRotation += 90;
-
-        if (videoRotation >= 360) {
-            videoRotation = 0;
+        else if (event.key.toLowerCase() === "r") {
+            event.preventDefault();
+            rotateVideoRight();
         }
-
-        applyVideoRotation();
-
-    }
-
-}
 
         // ==================================
         // F = FULLSCREEN
@@ -5376,13 +5991,13 @@ function showMoreMedia(
 
 
     const otherFiles =
-        mediaFiles.filter(
+        sortMediaFiles(mediaFiles.filter(
             function (file) {
 
                 return file !== currentFile;
 
             }
-        );
+        ));
 
 
     const filesToShow =
@@ -5641,8 +6256,9 @@ function toggleFullscreen() {
             "video/"
         )
     ) {
-fullscreenElement =
-    document.querySelector(".video-wrapper");
+
+        fullscreenElement =
+            document.querySelector(".watch-main");
 
     }
 
@@ -5709,36 +6325,65 @@ fullscreenElement =
 
 
 
+
+
+
 // ==========================================
-// FULLSCREEN CHANGE
-// KEEP VIDEO ROTATION
+// FULLSCREEN CLOSE BUTTON AUTO-HIDE
+// Show Close while the mouse moves, then hide it after a short pause.
 // ==========================================
+const watchMainForFullscreen = document.querySelector(".watch-main");
+let fullscreenCloseHideTimer = null;
 
-document.addEventListener(
-    "fullscreenchange",
-    function () {
-
-        if (
-            currentMediaFile &&
-            currentMediaFile.type.startsWith("video/")
-        ) {
-
-            // Browser ko fullscreen dimensions update
-            // karne ka time do
-            requestAnimationFrame(function () {
-
-                requestAnimationFrame(function () {
-
-                    applyVideoRotation();
-
-                });
-
-            });
-
-        }
-
+function showFullscreenCloseButton() {
+    if (!watchMainForFullscreen || document.fullscreenElement !== watchMainForFullscreen) {
+        return;
     }
-);
+
+    watchMainForFullscreen.classList.remove("fullscreen-controls-hidden");
+
+    if (fullscreenCloseHideTimer) {
+        clearTimeout(fullscreenCloseHideTimer);
+    }
+
+    fullscreenCloseHideTimer = setTimeout(function () {
+        if (document.fullscreenElement === watchMainForFullscreen) {
+            watchMainForFullscreen.classList.add("fullscreen-controls-hidden");
+        }
+    }, 2200);
+}
+
+if (watchMainForFullscreen) {
+    watchMainForFullscreen.addEventListener("mousemove", showFullscreenCloseButton);
+    watchMainForFullscreen.addEventListener("pointermove", showFullscreenCloseButton);
+    watchMainForFullscreen.addEventListener("touchstart", showFullscreenCloseButton, { passive: true });
+}
+
+document.addEventListener("fullscreenchange", function () {
+    if (fullscreenCloseHideTimer) {
+        clearTimeout(fullscreenCloseHideTimer);
+        fullscreenCloseHideTimer = null;
+    }
+
+    if (watchMainForFullscreen) {
+        watchMainForFullscreen.classList.remove("fullscreen-controls-hidden");
+    }
+
+    if (document.fullscreenElement === watchMainForFullscreen) {
+        showFullscreenCloseButton();
+    }
+});
+
+// Recalculate the rotated video after entering or leaving fullscreen.
+document.addEventListener("fullscreenchange", function () {
+    if (!currentMediaFile || !currentMediaFile.type.startsWith("video/")) return;
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            applyVideoRotation();
+        });
+    });
+});
+
     </script>
 </body>
 </html>

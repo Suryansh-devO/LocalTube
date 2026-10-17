@@ -3019,14 +3019,426 @@ body.watching-media .recommendations::-webkit-scrollbar {
         font-size: 11px;
     }
 }
+
+
+/* =========================================================
+   SORT MENU — beside All / Videos / Images
+   ========================================================= */
+.top-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sort-container {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 8px 13px;
+    color: #eee;
+    background: #272727;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.sort-btn:hover,
+.sort-btn[aria-expanded="true"] {
+    background: #383838;
+}
+
+.sort-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 300;
+    width: 230px;
+    padding: 16px;
+    background: #202020;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.sort-menu[hidden] {
+    display: none !important;
+}
+
+.sort-menu label {
+    display: block;
+    margin: 0 0 7px;
+    color: #ccc;
+    font-size: 12px;
+}
+
+.sort-menu select {
+    width: 100%;
+    min-height: 38px;
+    margin: 0 0 14px;
+    padding: 8px 10px;
+    color: #fff;
+    background: #111;
+    border: 1px solid #444;
+    border-radius: 7px;
+    outline: none;
+}
+
+.sort-menu select:last-child {
+    margin-bottom: 0;
+}
+
+.sort-menu select:focus {
+    border-color: #3ea6ff;
+}
+
+@media (max-width: 650px) {
+    .top-section {
+        align-items: flex-start;
+        gap: 12px;
+        flex-direction: column;
+    }
+
+    .top-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .filter-buttons {
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .filter {
+        padding: 8px 10px;
+    }
+}
+
+
+/* AUTO PLAY TOGGLE BESIDE VIDEO CONTROLS */
+.custom-video-controls .autoplay-toggle {
+    flex: 0 0 auto;
+    border: 1px solid #444;
+    background: #252525;
+    color: #eee;
+    padding: 8px 11px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 13px;
+}
+.custom-video-controls .autoplay-toggle:hover { background: #333; }
+.custom-video-controls .autoplay-toggle.is-on {
+    background: #e5e5e5; color: #111; border-color: #e5e5e5;
+}
+.custom-video-controls .autoplay-toggle:focus-visible {
+    outline: 2px solid #3ea6ff; outline-offset: 2px;
+}
+@media (max-width: 700px) {
+    .custom-video-controls .autoplay-toggle { padding: 7px 8px; font-size: 11px; }
+}
+
+
+/* =========================================================
+   FINAL ROTATION + FULLSCREEN + ROTATE-NEXT FIX
+   ========================================================= */
+.watch-page .main-video {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+.watch-page .video-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+.watch-page #videoPlayer {
+    display: block !important;
+    flex: 0 0 auto !important;
+    object-fit: contain !important;
+    transform-origin: center center !important;
+    transition: transform 0.22s ease !important;
+    background: #000 !important;
+}
 .video-wrapper:fullscreen {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
 }
 .video-wrapper:fullscreen #videoPlayer {
+    object-fit: contain !important;
+}
+.custom-video-controls .rotate-next-toggle {
+    flex: 0 0 auto;
+    border: 1px solid #444;
+    background: #252525;
+    color: #eee;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 12px;
+}
+.custom-video-controls .rotate-next-toggle:hover { background: #333; }
+.custom-video-controls .rotate-next-toggle.is-on {
+    background: #e5e5e5;
+    color: #111;
+    border-color: #e5e5e5;
+}
+@media (max-width: 850px) {
+    .custom-video-controls { gap: 5px !important; flex-wrap: wrap; }
+    .custom-video-controls #videoProgress { min-width: 60px; }
+    .custom-video-controls .rotate-next-toggle { padding: 7px 8px; font-size: 11px; }
+}
+
+
+/* FINAL ROTATION + FULLSCREEN FIX */
+.video-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #000 !important;
+}
+
+#videoPlayer {
+    display: block !important;
+    flex: 0 0 auto !important;
+    object-fit: contain !important;
+    transform-origin: center center !important;
+    transition: transform 0.22s ease !important;
+    background: #000 !important;
+    controls: none;
+}
+
+.video-wrapper:fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+
+.video-wrapper:fullscreen #videoPlayer {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+
+/* Rotation fill fix: clip overflow to the fixed player viewport. */
+.watch-page .video-wrapper {
+    overflow: hidden !important;
+    isolation: isolate;
+}
+.watch-page #videoPlayer {
+    object-fit: contain !important;
+}
+.video-wrapper:fullscreen #videoPlayer {
+    object-fit: contain !important;
+}
+
+
+/* Final repair: keep Sort visible on the home library and watch page. */
+body:not(.watching-media) .main .top-section {
+    display: flex !important;
+    visibility: visible !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+body:not(.watching-media) .main .top-actions {
+    display: flex !important;
+    visibility: visible !important;
+}
+.sort-container, .watch-sort-container {
+    position: relative;
+    flex: 0 0 auto;
+}
+.watch-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.watch-sort-container { margin-left: auto; }
+.watch-sort-menu { top: calc(100% + 8px); right: 0; }
+
+/* Fullscreen the custom player panel rather than the video element. */
+.watch-main:fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18px 22px 12px !important;
+    box-sizing: border-box !important;
+    background: #000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center;
+    overflow: hidden !important;
+}
+.watch-main:fullscreen .main-video {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    display: flex !important;
+    position: relative !important;
+}
+.watch-main:fullscreen .video-wrapper {
+    flex: 1 1 auto;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden !important;
+    position: relative !important;
+    background: #000 !important;
+}
+.watch-main:fullscreen #playerTitle {
+    flex: 0 0 auto;
+    max-height: 2.5em;
+    overflow: hidden;
+}
+.watch-main:fullscreen .custom-video-controls {
+    flex: 0 0 auto;
     width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
+}
+.watch-main:fullscreen .media-details { flex: 0 0 auto; }
+.watch-main:fullscreen .close-btn { z-index: 99999; }
+
+@media (max-width: 700px) {
+    .watch-sort-container .sort-btn { padding: 7px 10px; }
+    .watch-main:fullscreen { padding: 10px !important; }
+}
+
+
+/* FINAL PATCH v4: rotation sizing must override older !important rules. */
+.watch-page #videoPlayer {
+    transform-origin: center center !important;
+}
+
+/* In fullscreen show the video only. Keep the close button available. */
+.watch-main:fullscreen .custom-video-controls,
+.watch-main:fullscreen #playerTitle,
+.watch-main:fullscreen .media-details {
+    display: none !important;
+}
+
+.watch-main:fullscreen .main-video {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+}
+
+.watch-main:fullscreen .video-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    background: #000 !important;
+}
+
+.watch-main:fullscreen #videoPlayer {
+    object-fit: contain;
+}
+
+/* Keep the home-page Sort control visible alongside filters. */
+.main > .top-section,
+.main > .top-section .top-actions {
+    display: flex !important;
+    visibility: visible !important;
+}
+.main > .top-section {
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+
+/* FINAL PATCH v5: keep Sort and Close buttons separated. */
+.watch-header {
+    position: relative;
+    padding-right: 76px;
+    box-sizing: border-box;
+}
+.watch-sort-container {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+/* In fullscreen, the Close button appears on pointer activity and fades away. */
+.watch-main:fullscreen .close-btn {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.watch-main:fullscreen.fullscreen-controls-hidden .close-btn {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+
+/* FINAL PATCH v7: Loop toggle button matches the existing video controls. */
+#loopVideoBtn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+#loopVideoBtn.is-on {
+    background: #f1f1f1;
+    color: #111;
+    border-color: #f1f1f1;
+}
+.home-keyboard-guide {
+    max-height: 75vh;
+    overflow-y: auto;
+}
+@media (max-width: 900px) {
+    #loopVideoBtn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
 }
