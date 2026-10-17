@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LocalTube</title>
+  
     <style>
         
 /* ================= GENERAL ================= */
@@ -3451,6 +3452,20 @@ body:not(.watching-media) .main .top-actions {
     }
 }
 
+
+/* FINAL PATCH v9: keep the video viewport stable; JS computes rotated fit from source dimensions. */
+.watch-page .video-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    overflow: hidden !important;
+    isolation: isolate;
+    background: #000 !important;
+}
+.watch-page #videoPlayer {
+    transform-origin: center center !important;
+    background: #000 !important;
+}
+
     </style>
 </head>
 
@@ -5044,52 +5059,91 @@ function applyVideoRotation() {
     const boxHeight = wrapper.clientHeight;
     if (!boxWidth || !boxHeight) return;
 
-    // Never use the browser's built-in video controls; LocalTube has its own.
+    // Always keep the browser's native controls disabled; LocalTube has custom controls.
     videoPlayer.controls = false;
     videoPlayer.removeAttribute("controls");
     videoPlayer.style.transformOrigin = "center center";
-    videoPlayer.style.transition = "transform 0.22s ease, width 0.22s ease, height 0.22s ease";
+    videoPlayer.style.transition = "transform 0.22s ease";
     videoPlayer.style.flex = "0 0 auto";
+    videoPlayer.style.maxWidth = "none";
+    videoPlayer.style.maxHeight = "none";
 
-    // 0°/180°: keep the regular frame fitting inside the player.
+    // 0° and 180°: normal video sizing, no special rotated dimensions.
     if (videoRotation % 180 === 0) {
         videoPlayer.style.position = "relative";
         videoPlayer.style.left = "auto";
         videoPlayer.style.top = "auto";
-        videoPlayer.style.setProperty("width", "100%", "important");
-        videoPlayer.style.setProperty("height", "100%", "important");
-        videoPlayer.style.setProperty("max-width", "100%", "important");
-        videoPlayer.style.setProperty("max-height", "100%", "important");
-        videoPlayer.style.setProperty("object-fit", "contain", "important");
+        videoPlayer.style.width = "100%";
+        videoPlayer.style.height = "100%";
+        videoPlayer.style.maxWidth = "100%";
+        videoPlayer.style.maxHeight = "100%";
+        videoPlayer.style.objectFit = "contain";
         videoPlayer.style.transform = `rotate(${videoRotation}deg)`;
         return;
     }
 
-    // 90°/270°: swap the unrotated box dimensions. Once rotated, its
-    // bounding box matches the player area. COVER fills that area; cropping
-    // at the edges is expected when the video's aspect ratio differs.
+    // Wait for video metadata so we can preserve the source aspect ratio.
+    const sourceWidth = videoPlayer.videoWidth;
+    const sourceHeight = videoPlayer.videoHeight;
+    if (!sourceWidth || !sourceHeight) {
+        videoPlayer.style.position = "absolute";
+        videoPlayer.style.left = "50%";
+        videoPlayer.style.top = "50%";
+        videoPlayer.style.width = `${boxHeight}px`;
+        videoPlayer.style.height = `${boxWidth}px`;
+        videoPlayer.style.objectFit = "contain";
+        videoPlayer.style.transform =
+            `translate(-50%, -50%) rotate(${videoRotation}deg)`;
+        return;
+    }
+
+    // First calculate how large the source video would be in the viewport
+    // without rotation, using object-fit: contain.
+    const sourceRatio = sourceWidth / sourceHeight;
+    let fittedWidth;
+    let fittedHeight;
+
+    if (sourceRatio >= boxWidth / boxHeight) {
+        fittedWidth = boxWidth;
+        fittedHeight = boxWidth / sourceRatio;
+    } else {
+        fittedHeight = boxHeight;
+        fittedWidth = boxHeight * sourceRatio;
+    }
+
+    // Rotating swaps the fitted width/height. Scale the rotated frame to COVER
+    // the viewport, avoiding the previous zero/near-zero visible-video issue.
+    const rotatedWidth = fittedHeight;
+    const rotatedHeight = fittedWidth;
+    const scale = Math.max(
+        boxWidth / rotatedWidth,
+        boxHeight / rotatedHeight
+    );
+
     videoPlayer.style.position = "absolute";
     videoPlayer.style.left = "50%";
     videoPlayer.style.top = "50%";
-    videoPlayer.style.setProperty("width", `${boxHeight}px`, "important");
-    videoPlayer.style.setProperty("height", `${boxWidth}px`, "important");
-    videoPlayer.style.setProperty("max-width", "none", "important");
-    videoPlayer.style.setProperty("max-height", "none", "important");
-    videoPlayer.style.setProperty("object-fit", "cover", "important");
-    videoPlayer.style.transform = `translate(-50%, -50%) rotate(${videoRotation}deg)`;
+    videoPlayer.style.width = `${fittedWidth}px`;
+    videoPlayer.style.height = `${fittedHeight}px`;
+    videoPlayer.style.maxWidth = "none";
+    videoPlayer.style.maxHeight = "none";
+    videoPlayer.style.objectFit = "contain";
+    videoPlayer.style.transform =
+        `translate(-50%, -50%) rotate(${videoRotation}deg) scale(${scale})`;
 }
 
 function resetVideoRotation() {
     videoRotation = 0;
     if (!videoPlayer) return;
+
     videoPlayer.style.position = "relative";
     videoPlayer.style.left = "auto";
     videoPlayer.style.top = "auto";
     videoPlayer.style.width = "100%";
     videoPlayer.style.height = "100%";
-    videoPlayer.style.setProperty("max-width", "100%", "important");
-    videoPlayer.style.setProperty("max-height", "100%", "important");
-    videoPlayer.style.setProperty("object-fit", "contain", "important");
+    videoPlayer.style.maxWidth = "100%";
+    videoPlayer.style.maxHeight = "100%";
+    videoPlayer.style.objectFit = "contain";
     videoPlayer.style.transform = "rotate(0deg)";
 }
 

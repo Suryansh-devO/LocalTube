@@ -3442,3 +3442,17 @@ body:not(.watching-media) .main .top-actions {
         font-size: 12px;
     }
 }
+
+
+/* FINAL PATCH v9: keep the video viewport stable; JS computes rotated fit from source dimensions. */
+.watch-page .video-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    overflow: hidden !important;
+    isolation: isolate;
+    background: #000 !important;
+}
+.watch-page #videoPlayer {
+    transform-origin: center center !important;
+    background: #000 !important;
+}
