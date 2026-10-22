@@ -105,7 +105,7 @@
                     <h2>Select a folder</h2>
                     <p>
                         Choose a folder from your PC to see your
-                        videos and images here.
+                        videos, images and audio here.
                     </p>
                     <button id="selectFolderEmpty">
                         Select Media Folder
@@ -117,13 +117,16 @@
 
                     <div class="home-key-list">
                         <div class="home-key-item"><kbd>Space</kbd><span>Play / Pause</span></div>
+                        <div class="home-key-item"><kbd>A</kbd><span>Toggle Auto Play next</span></div>
                         <div class="home-key-item"><kbd>J</kbd><span>Seek back 10 seconds</span></div>
                          <div class="home-key-item"><kbd>K</kbd><span>Seek forword 10 seconds</span></div>
                         <div class="home-key-item"><kbd>L</kbd><span>Toggle video loop On / Off</span></div>
                         <div class="home-key-item"><kbd>←</kbd><span>Play previous media of the same type</span></div>
                         <div class="home-key-item"><kbd>→</kbd><span>Play next media of the same type</span></div>
-                        <div class="home-key-item"><kbd>R</kbd><span>Rotate video 90° clockwise</span></div>
+                        <div class="home-key-item"><kbd>R</kbd><span>Rotate video 90°</span></div>
+                        <div class="home-key-item"><kbd>Ctrl + R</kbd><span>Toggle Rotation Lock for next videos</span></div>
                         <div class="home-key-item"><kbd>F</kbd><span>Enter / exit fullscreen</span></div>
+                        <div class="home-key-item"><kbd>Esc</kbd><span>Exit fullscreen / close player</span></div>
                         <div class="home-key-item"><kbd>↑</kbd><span>Scroll watch page up</span></div>
                         <div class="home-key-item"><kbd>↓</kbd><span>Scroll watch page down</span></div>
                         <div class="home-key-item"><kbd>Esc</kbd><span>Exit fullscreen (browser shortcut)</span></div>
@@ -178,14 +181,22 @@
                     <!-- ================= MAIN VIDEO ================= -->
                     <div class="main-video">
                         <div class="video-wrapper">
-                            <video
-                                id="videoPlayer"
-                                autoplay
-                                playsinline
-                            ></video>
+                            <div id="videoRotationLayer" class="video-rotation-layer">
+                                <video
+                                    id="videoPlayer"
+                                    autoplay
+                                    playsinline
+                                ></video>
+                            </div>
+                            <canvas id="videoRotationCanvas" aria-hidden="true"></canvas>
                         </div>
 
                         <img id="imageViewer" alt="Image">
+                        <div id="audioViewer" class="audio-viewer" aria-label="Audio artwork">
+                            <div class="audio-art-icon">♫</div>
+                            <div id="audioViewerTitle" class="audio-viewer-title"></div>
+                            <div class="audio-viewer-subtitle">Now playing</div>
+                        </div>
                     </div>
 
                     <h2 id="playerTitle"></h2>

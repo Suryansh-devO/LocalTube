@@ -21,7 +21,11 @@ const sortOrder = document.getElementById("sortOrder");
 
 const playerModal = document.getElementById("playerModal");
 const videoPlayer = document.getElementById("videoPlayer");
+const videoWrapper = document.querySelector(".video-wrapper");
+const videoRotationCanvas = document.getElementById("videoRotationCanvas");
 const imageViewer = document.getElementById("imageViewer");
+const audioViewer = document.getElementById("audioViewer");
+const audioViewerTitle = document.getElementById("audioViewerTitle");
 
 const playerTitle = document.getElementById("playerTitle");
 const closePlayer = document.getElementById("closePlayer");
@@ -142,21 +146,15 @@ async function readFolderFiles(folderHandle) {
 
 
                     const isVideo =
-                        file.type.startsWith(
-                            "video/"
-                        );
+                        file.type.startsWith("video/") || getMediaType(file.name) === "video";
 
 
                     const isImage =
-                        file.type.startsWith(
-                            "image/"
-                        );
+                        file.type.startsWith("image/") || getMediaType(file.name) === "image";
+                    const isAudio =
+                        file.type.startsWith("audio/") || getMediaType(file.name) === "audio";
 
-
-                    if (
-                        isVideo ||
-                        isImage
-                    ) {
+                    if (isVideo || isImage || isAudio) {
 
                         files.push(file);
 
@@ -376,8 +374,10 @@ if (folderInput) {
                 files.filter(function (file) {
 
                     return (
-                        file.type.startsWith("video/") ||
-                        file.type.startsWith("image/")
+                        getMediaType(file.name) === "video" ||
+                        file.type.startsWith("image/") ||
+                        file.type.startsWith("audio/") ||
+                        ["mp4", "m4v", "webm", "ogv", "ogg", "mov", "avi", "mkv", "3gp", "mpeg", "mpg", "wmv", "flv", "mp3", "wav", "m4a", "aac", "flac", "opus", "oga", "weba", "aiff", "wma"].includes((file.name.split(".").pop() || "").toLowerCase())
                     );
 
                 });
@@ -439,7 +439,12 @@ function sortMediaFiles(files) {
 function getMediaType(fileName) {
     const extension = (fileName.split(".").pop() || "").toLowerCase();
     const videoExtensions = ["mp4", "m4v", "webm", "ogv", "ogg", "mov", "avi", "mkv", "3gp", "mpeg", "mpg", "wmv", "flv"];
-    return videoExtensions.includes(extension) ? "video" : "image";
+    const audioExtensions = ["mp3", "wav", "m4a", "aac", "flac", "opus", "oga", "weba", "aiff", "wma"];
+    const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "avif", "heic", "tif", "tiff"];
+    if (videoExtensions.includes(extension)) return "video";
+    if (audioExtensions.includes(extension)) return "audio";
+    if (imageExtensions.includes(extension)) return "image";
+    return "unknown";
 }
 
 // ==========================================
@@ -462,9 +467,7 @@ function showMedia() {
                 currentFilter === "video"
             ) {
 
-                return file.type.startsWith(
-                    "video/"
-                );
+                return getMediaType(file.name) === "video";
 
             }
 
@@ -473,9 +476,7 @@ function showMedia() {
                 currentFilter === "image"
             ) {
 
-                return file.type.startsWith(
-                    "image/"
-                );
+                return getMediaType(file.name) === "image";
 
             }
 
@@ -589,7 +590,7 @@ function createMediaCard(file) {
     // ======================================
 
     if (
-        file.type.startsWith("video/")
+        getMediaType(file.name) === "video"
     ) {
 
         const video =
@@ -666,11 +667,19 @@ function createMediaCard(file) {
 
 
     // ======================================
+    // AUDIO
+    // ======================================
+    else if (getMediaType(file.name) === "audio") {
+        const audioTile = document.createElement("div");
+        audioTile.className = "audio-thumbnail-art";
+        audioTile.innerHTML = `<span>♫</span><small>AUDIO</small>`;
+        thumbnail.appendChild(audioTile);
+    }
+
+    // ======================================
     // IMAGE
     // ======================================
-
     else {
-
         const image =
             document.createElement("img");
 
@@ -898,18 +907,19 @@ function formatFileSize(bytes) {
 function openMedia(file, preserveRotation = false) {
 
     const previousRotation = videoRotation;
-    const previousWasVideo = !!currentMediaFile &&
-        currentMediaFile.type.startsWith("video/");
+    const previousType = currentMediaFile ? getMediaType(currentMediaFile.name) : null;
+    const nextType = getMediaType(file.name);
 
     currentMediaFile = file;
 
-    // Keep the same angle only when the user enabled Rotate Next and
-    // another video is being opened through next/previous navigation.
-    if (preserveRotation && rotateNextEnabled && previousWasVideo &&
-        file.type.startsWith("video/")) {
+    // Keep rotation for image/video navigation when Rotate Next is enabled.
+    if (preserveRotation && rotateNextEnabled &&
+        ["video", "image"].includes(previousType) &&
+        ["video", "image"].includes(nextType)) {
         videoRotation = previousRotation;
     } else {
         resetVideoRotation();
+        if (imageViewer) imageViewer.style.transform = "rotate(0deg)";
     }
 
 
@@ -950,23 +960,25 @@ function openMedia(file, preserveRotation = false) {
     // ======================================
 
     if (
-        file.type.startsWith("video/")
+        getMediaType(file.name) === "video"
     ) {
 
         if (customVideoControls) {
             customVideoControls.style.display = "flex";
+            customVideoControls.classList.remove("image-mode");
         }
 
         mediaType.innerText =
             "🎬 Video";
 
 
-        imageViewer.style.display =
-            "none";
+        if (videoWrapper) videoWrapper.style.display = "flex";
+        imageViewer.style.display = "none";
+        if (audioViewer) audioViewer.style.display = "none";
 
-
-        videoPlayer.style.display =
-            "block";
+        videoPlayer.style.display = "block";
+        videoPlayer.style.opacity = "1";
+        if (videoRotationCanvas) videoRotationCanvas.style.display = "none";
 
         if (videoProgress) {
             videoProgress.value = 0;
@@ -1004,13 +1016,39 @@ function openMedia(file, preserveRotation = false) {
 
 
     // ======================================
+    // AUDIO
+    // ======================================
+    else if (getMediaType(file.name) === "audio") {
+        if (customVideoControls) {
+            customVideoControls.style.display = "flex";
+            customVideoControls.classList.remove("image-mode");
+        }
+        mediaType.innerText = "🎵 Audio";
+        if (videoWrapper) videoWrapper.style.display = "none";
+        imageViewer.style.display = "none";
+        if (audioViewer) audioViewer.style.display = "flex";
+        if (audioViewerTitle) audioViewerTitle.textContent = file.name;
+        videoPlayer.style.display = "none"; // Audio uses the media element but shows artwork instead.
+        videoPlayer.autoplay = true;
+        videoPlayer.src = url;
+        videoPlayer.load();
+        videoPlayer.muted = false;
+        updateLoopToggle();
+        if (videoProgress) videoProgress.value = 0;
+        if (videoCurrentTime) videoCurrentTime.textContent = "0:00";
+        if (videoDuration) videoDuration.textContent = "0:00";
+        videoPlayer.play().catch(function (error) { console.log("Audio autoplay blocked:", error); });
+    }
+
+    // ======================================
     // IMAGE
     // ======================================
-
     else {
-
+        if (videoWrapper) videoWrapper.style.display = "none";
+        if (audioViewer) audioViewer.style.display = "none";
         if (customVideoControls) {
-            customVideoControls.style.display = "none";
+            customVideoControls.style.display = "flex";
+            customVideoControls.classList.add("image-mode");
         }
 
         mediaType.innerText =
@@ -1028,12 +1066,24 @@ function openMedia(file, preserveRotation = false) {
             "none";
 
 
-        imageViewer.style.display =
-            "block";
+        imageViewer.style.display = "block";
+        imageViewer.style.position = "absolute";
+        imageViewer.style.zIndex = "2";
+        imageViewer.style.left = "50%";
+        imageViewer.style.top = "50%";
+        imageViewer.style.width = "auto";
+        imageViewer.style.height = "auto";
+        imageViewer.style.maxWidth = "none";
+        imageViewer.style.maxHeight = "none";
+        imageViewer.style.objectFit = "contain";
+        imageViewer.style.transformOrigin = "center center";
+        imageViewer.style.transition = "transform 0.22s ease";
 
-
-        imageViewer.src =
-            url;
+        imageViewer.onload = function () {
+            requestAnimationFrame(applyImageRotation);
+        };
+        imageViewer.src = url;
+        requestAnimationFrame(applyImageRotation);
 
     }
 
@@ -1142,7 +1192,7 @@ function createRecommendation(
     // ======================================
 
     if (
-        file.type.startsWith("video/")
+        getMediaType(file.name) === "video"
     ) {
 
         const video =
@@ -1197,11 +1247,19 @@ function createRecommendation(
 
 
     // ======================================
+    // AUDIO
+    // ======================================
+    else if (getMediaType(file.name) === "audio") {
+        const art = document.createElement("div");
+        art.className = "audio-thumbnail-art compact";
+        art.innerHTML = `<span>♫</span>`;
+        thumbnail.appendChild(art);
+    }
+
+    // ======================================
     // IMAGE
     // ======================================
-
     else {
-
         const image =
             document.createElement("img");
 
@@ -1307,117 +1365,156 @@ function createRecommendation(
 // ==========================================
 
 function applyVideoRotation() {
-    if (!videoPlayer) return;
+    if (!videoPlayer || !videoWrapper) return;
 
-    const wrapper = document.querySelector(".video-wrapper");
-    if (!wrapper) return;
+    const canvas = videoRotationCanvas;
+    const layer = document.getElementById("videoRotationLayer");
+    const ctx = canvas ? canvas.getContext("2d") : null;
+    const rotated = videoRotation % 360 !== 0;
 
-    const boxWidth = wrapper.clientWidth;
-    const boxHeight = wrapper.clientHeight;
-    if (!boxWidth || !boxHeight) return;
-
-    // Always keep the browser's native controls disabled; LocalTube has custom controls.
-    videoPlayer.controls = false;
-    videoPlayer.removeAttribute("controls");
-    videoPlayer.style.transformOrigin = "center center";
-    videoPlayer.style.transition = "transform 0.22s ease";
-    videoPlayer.style.flex = "0 0 auto";
-    videoPlayer.style.maxWidth = "none";
-    videoPlayer.style.maxHeight = "none";
-
-    // 0° and 180°: normal video sizing, no special rotated dimensions.
-    if (videoRotation % 180 === 0) {
-        videoPlayer.style.position = "relative";
-        videoPlayer.style.left = "auto";
-        videoPlayer.style.top = "auto";
-        videoPlayer.style.width = "100%";
-        videoPlayer.style.height = "100%";
-        videoPlayer.style.maxWidth = "100%";
-        videoPlayer.style.maxHeight = "100%";
-        videoPlayer.style.objectFit = "contain";
-        videoPlayer.style.transform = `rotate(${videoRotation}deg)`;
-        return;
+    // Keep the real video element playing for reliable audio/playback. For
+    // rotated views, render its frames onto a canvas instead of transforming
+    // the browser's hardware-decoded video surface (which can turn black).
+    if (layer) {
+        layer.style.position = "absolute";
+        layer.style.inset = "0";
+        layer.style.width = "100%";
+        layer.style.height = "100%";
+        layer.style.transform = "none";
+        layer.style.display = "flex";
+        layer.style.alignItems = "center";
+        layer.style.justifyContent = "center";
     }
+    videoPlayer.style.transform = "none";
+    videoPlayer.style.opacity = rotated ? "0" : "1";
 
-    // Wait for video metadata so we can preserve the source aspect ratio.
-    const sourceWidth = videoPlayer.videoWidth;
-    const sourceHeight = videoPlayer.videoHeight;
-    if (!sourceWidth || !sourceHeight) {
-        videoPlayer.style.position = "absolute";
-        videoPlayer.style.left = "50%";
-        videoPlayer.style.top = "50%";
-        videoPlayer.style.width = `${boxHeight}px`;
-        videoPlayer.style.height = `${boxWidth}px`;
-        videoPlayer.style.objectFit = "contain";
-        videoPlayer.style.transform =
-            `translate(-50%, -50%) rotate(${videoRotation}deg)`;
-        return;
+    if (!canvas || !ctx) return;
+    canvas.style.display = rotated ? "block" : "none";
+    if (!rotated) return;
+
+    const boxW = videoWrapper.clientWidth;
+    const boxH = videoWrapper.clientHeight;
+    const sourceW = videoPlayer.videoWidth;
+    const sourceH = videoPlayer.videoHeight;
+    if (!boxW || !boxH || !sourceW || !sourceH) return;
+
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const pixelW = Math.round(boxW * dpr);
+    const pixelH = Math.round(boxH * dpr);
+    if (canvas.width !== pixelW || canvas.height !== pixelH) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
     }
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
 
-    // First calculate how large the source video would be in the viewport
-    // without rotation, using object-fit: contain.
-    const sourceRatio = sourceWidth / sourceHeight;
-    let fittedWidth;
-    let fittedHeight;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, boxW, boxH);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, boxW, boxH);
 
-    if (sourceRatio >= boxWidth / boxHeight) {
-        fittedWidth = boxWidth;
-        fittedHeight = boxWidth / sourceRatio;
-    } else {
-        fittedHeight = boxHeight;
-        fittedWidth = boxHeight * sourceRatio;
+    const angle = ((videoRotation % 360) + 360) % 360;
+    const sideways = angle === 90 || angle === 270;
+    const outputW = sideways ? sourceH : sourceW;
+    const outputH = sideways ? sourceW : sourceH;
+    const scale = Math.min(boxW / outputW, boxH / outputH);
+    const drawW = sourceW * scale;
+    const drawH = sourceH * scale;
+
+    ctx.save();
+    ctx.translate(boxW / 2, boxH / 2);
+    ctx.rotate(angle * Math.PI / 180);
+    ctx.drawImage(videoPlayer, -drawW / 2, -drawH / 2, drawW, drawH);
+    ctx.restore();
+}
+
+let videoRotationFrame = 0;
+function renderRotatedVideoFrame() {
+    if (videoRotationCanvas && videoRotation % 360 !== 0 &&
+        currentMediaFile && getMediaType(currentMediaFile.name) === "video") {
+        applyVideoRotation();
     }
-
-    // Rotating swaps the fitted width/height. Scale the rotated frame to COVER
-    // the viewport, avoiding the previous zero/near-zero visible-video issue.
-    const rotatedWidth = fittedHeight;
-    const rotatedHeight = fittedWidth;
-    const scale = Math.max(
-        boxWidth / rotatedWidth,
-        boxHeight / rotatedHeight
-    );
-
-    videoPlayer.style.position = "absolute";
-    videoPlayer.style.left = "50%";
-    videoPlayer.style.top = "50%";
-    videoPlayer.style.width = `${fittedWidth}px`;
-    videoPlayer.style.height = `${fittedHeight}px`;
-    videoPlayer.style.maxWidth = "none";
-    videoPlayer.style.maxHeight = "none";
-    videoPlayer.style.objectFit = "contain";
-    videoPlayer.style.transform =
-        `translate(-50%, -50%) rotate(${videoRotation}deg) scale(${scale})`;
+    videoRotationFrame = requestAnimationFrame(renderRotatedVideoFrame);
+}
+if (!videoRotationFrame) {
+    videoRotationFrame = requestAnimationFrame(renderRotatedVideoFrame);
 }
 
 function resetVideoRotation() {
     videoRotation = 0;
-    if (!videoPlayer) return;
-
-    videoPlayer.style.position = "relative";
-    videoPlayer.style.left = "auto";
-    videoPlayer.style.top = "auto";
-    videoPlayer.style.width = "100%";
-    videoPlayer.style.height = "100%";
-    videoPlayer.style.maxWidth = "100%";
-    videoPlayer.style.maxHeight = "100%";
-    videoPlayer.style.objectFit = "contain";
-    videoPlayer.style.transform = "rotate(0deg)";
+    if (videoPlayer) {
+        videoPlayer.style.transform = "none";
+        videoPlayer.style.opacity = "1";
+    }
+    if (videoRotationCanvas) videoRotationCanvas.style.display = "none";
+    const layer = document.getElementById("videoRotationLayer");
+    const wrapper = document.querySelector(".video-wrapper");
+    if (layer && wrapper) {
+        layer.style.position = "absolute";
+        layer.style.left = "50%";
+        layer.style.top = "50%";
+        layer.style.width = `${wrapper.clientWidth}px`;
+        layer.style.height = `${wrapper.clientHeight}px`;
+        layer.style.transform = "none";
+    }
 }
 
 function rotateVideoRight() {
-    if (!currentMediaFile || !currentMediaFile.type.startsWith("video/")) return;
+    if (!currentMediaFile) return;
+    const type = getMediaType(currentMediaFile.name);
+    if (type !== "video" && type !== "image") return;
 
-    // Requested order: first press turns right to 270°, then 180°, 90°, 0°.
+    // First press rotates right to 270°, then 180°, 90°, and back to 0°.
     videoRotation = videoRotation === 0 ? 270 :
         videoRotation === 270 ? 180 :
         videoRotation === 180 ? 90 : 0;
-    applyVideoRotation();
+
+    if (type === "video") {
+        applyVideoRotation();
+    } else if (imageViewer) {
+        applyImageRotation();
+    }
+}
+
+// Keep the image's natural proportions. Recalculate its maximum contained size
+// after rotation so portrait <-> landscape uses the available player space.
+function applyImageRotation() {
+    if (!imageViewer || !currentMediaFile || getMediaType(currentMediaFile.name) !== "image") return;
+
+    const container = document.querySelector(".main-video");
+    if (!container) return;
+
+    const boxWidth = container.clientWidth;
+    const boxHeight = container.clientHeight;
+    const naturalWidth = imageViewer.naturalWidth;
+    const naturalHeight = imageViewer.naturalHeight;
+    if (!boxWidth || !boxHeight || !naturalWidth || !naturalHeight) return;
+
+    const sideways = Math.abs(videoRotation % 180) === 90;
+    // After rotation, visual width/height swap. Scale the source dimensions
+    // so the rotated image fits inside the player without stretching or cropping.
+    const rotatedWidth = sideways ? naturalHeight : naturalWidth;
+    const rotatedHeight = sideways ? naturalWidth : naturalHeight;
+    const scale = Math.min(boxWidth / rotatedWidth, boxHeight / rotatedHeight);
+
+    imageViewer.style.position = "absolute";
+    imageViewer.style.left = "50%";
+    imageViewer.style.top = "50%";
+    // CSS has legacy !important sizing rules; set inline important dimensions
+    // so the image keeps its natural aspect ratio instead of being stretched to fill.
+    imageViewer.style.setProperty("width", `${naturalWidth * scale}px`, "important");
+    imageViewer.style.setProperty("height", `${naturalHeight * scale}px`, "important");
+    imageViewer.style.maxWidth = "none";
+    imageViewer.style.maxHeight = "none";
+    imageViewer.style.objectFit = "contain";
+    imageViewer.style.transformOrigin = "center center";
+    imageViewer.style.transform = `translate(-50%, -50%) rotate(${videoRotation}deg)`;
 }
 
 function updateRotateNextButton() {
     if (!rotateNextToggleBtn) return;
     rotateNextToggleBtn.textContent = rotateNextEnabled
-        ? "↪ Rotate Next: On"
+        ? "🔒 Rotation Lock: On"
         : "↪ Rotate Next: Off";
     rotateNextToggleBtn.setAttribute("aria-pressed", String(rotateNextEnabled));
     rotateNextToggleBtn.classList.toggle("is-on", rotateNextEnabled);
@@ -1432,7 +1529,10 @@ if (rotateNextToggleBtn) {
 }
 
 if (rotateVideoBtn) {
-    rotateVideoBtn.addEventListener("click", rotateVideoRight);
+    rotateVideoBtn.addEventListener("click", function () {
+        rotateVideoRight();
+        showShortcutToast(`Rotate: ${videoRotation}°`);
+    });
 }
 
 window.addEventListener(
@@ -1445,7 +1545,11 @@ window.addEventListener(
             videoRotation !== 0
         ) {
 
-            applyVideoRotation();
+            if (currentMediaFile && getMediaType(currentMediaFile.name) === "image") {
+                applyImageRotation();
+            } else {
+                applyVideoRotation();
+            }
 
         }
 
@@ -1486,13 +1590,16 @@ function updateLoopToggle() {
 }
 
 function toggleVideoLoop() {
-    if (!currentMediaFile || !currentMediaFile.type.startsWith("video/")) return;
+    if (!currentMediaFile || !["video", "audio"].includes(getMediaType(currentMediaFile.name))) return;
     videoPlayer.loop = !videoPlayer.loop;
     updateLoopToggle();
 }
 
 if (loopVideoBtn) {
-    loopVideoBtn.addEventListener("click", toggleVideoLoop);
+    loopVideoBtn.addEventListener("click", function () {
+        toggleVideoLoop();
+        showShortcutToast(`Loop: ${videoPlayer.loop ? "ON" : "OFF"}`);
+    });
     updateLoopToggle();
 }
 
@@ -1505,11 +1612,14 @@ function updateAutoPlayToggle() {
     autoPlayToggleBtn.classList.toggle("is-on", autoPlayNextEnabled);
 }
 
+function toggleAutoPlay() {
+    autoPlayNextEnabled = !autoPlayNextEnabled;
+    updateAutoPlayToggle();
+    showShortcutToast(`Auto Play: ${autoPlayNextEnabled ? "ON" : "OFF"}`);
+}
+
 if (autoPlayToggleBtn) {
-    autoPlayToggleBtn.addEventListener("click", function () {
-        autoPlayNextEnabled = !autoPlayNextEnabled;
-        updateAutoPlayToggle();
-    });
+    autoPlayToggleBtn.addEventListener("click", toggleAutoPlay);
     updateAutoPlayToggle();
 }
 
@@ -1603,7 +1713,7 @@ videoPlayer.addEventListener(
 // Automatically open the next video only when Auto Play is turned ON.
 videoPlayer.addEventListener("ended", function () {
     if (!autoPlayNextEnabled || !currentMediaFile) return;
-    if (!currentMediaFile.type.startsWith("video/")) return;
+    if (!["video", "audio"].includes(getMediaType(currentMediaFile.name))) return;
     nextMediaFile();
 });
 
@@ -1704,7 +1814,10 @@ videoProgress.addEventListener(
 // ==========================================
 
 if (fullscreenVideoBtn) {
-    fullscreenVideoBtn.addEventListener("click", toggleFullscreen);
+    fullscreenVideoBtn.addEventListener("click", function () {
+        toggleFullscreen();
+        showShortcutToast("Fullscreen toggle");
+    });
 }
 
 // ==========================================
@@ -1735,8 +1848,7 @@ function closePlayerWindow() {
 
 function finishClosePlayer() {
 
-    videoRotation = 0;
-    videoPlayer.style.transform = "rotate(0deg) scale(1)";
+    resetVideoRotation();
     videoPlayer.pause();
     videoPlayer.removeAttribute("src");
     videoPlayer.load();
@@ -1753,6 +1865,8 @@ function finishClosePlayer() {
     }
 
     currentMediaFile = null;
+    const toast = document.getElementById("shortcutStatusToast");
+    if (toast) toast.classList.remove("visible");
 }
 
 
@@ -1937,34 +2051,15 @@ function updateFilterButtons() {
 
 
 // ==========================================
-// SAME TYPE MEDIA
+// PLAYABLE MEDIA (VIDEO + AUDIO)
 // ==========================================
 
-function getSameTypeMedia() {
-
-    if (!currentMediaFile) {
-
-        return [];
-
-    }
-
-
-    const isVideo =
-        currentMediaFile.type.startsWith(
-            "video/"
-        );
-
-
-    return sortMediaFiles(mediaFiles.filter(
-        function (file) {
-
-            return isVideo
-                ? file.type.startsWith("video/")
-                : file.type.startsWith("image/");
-
-        }
-    ));
-
+function getNavigableMedia() {
+    // Arrow navigation follows the complete media sequence: video, GIF, image, audio.
+    // Each file is then opened by openMedia() using its correct viewer.
+    return sortMediaFiles(mediaFiles.filter(function (file) {
+        return ["video", "audio", "image"].includes(getMediaType(file.name));
+    }));
 }
 
 
@@ -1975,7 +2070,7 @@ function getSameTypeMedia() {
 function nextMediaFile() {
 
     const list =
-        getSameTypeMedia();
+        getNavigableMedia();
 
 
     if (
@@ -2021,7 +2116,7 @@ function nextMediaFile() {
 function previousMediaFile() {
 
     const list =
-        getSameTypeMedia();
+        getNavigableMedia();
 
 
     if (
@@ -2062,6 +2157,32 @@ function previousMediaFile() {
 
 
 // ==========================================
+// SHORTCUT STATUS TOAST (especially useful in fullscreen)
+// ==========================================
+let shortcutToastTimer = null;
+function showShortcutToast(message) {
+    let toast = document.getElementById("shortcutStatusToast");
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "shortcutStatusToast";
+        toast.className = "shortcut-status-toast";
+        toast.setAttribute("role", "status");
+        toast.setAttribute("aria-live", "polite");
+
+        // The toast must be inside the element that enters fullscreen.
+        // Browsers only render descendants of the fullscreen element.
+        const fullscreenHost = document.querySelector(".watch-main");
+        (fullscreenHost || document.body).appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add("visible");
+    if (shortcutToastTimer) clearTimeout(shortcutToastTimer);
+    shortcutToastTimer = setTimeout(function () {
+        toast.classList.remove("visible");
+    }, 2000);
+}
+
+// ==========================================
 // KEYBOARD CONTROLS
 // ==========================================
 
@@ -2096,6 +2217,16 @@ document.addEventListener(
         }
 
 
+        // Ctrl+R = Rotation Lock / Rotate Next toggle. Prevent browser reload.
+        if (event.ctrlKey && event.key.toLowerCase() === "r") {
+            event.preventDefault();
+            event.stopPropagation();
+            rotateNextEnabled = !rotateNextEnabled;
+            updateRotateNextButton();
+            showShortcutToast(`Rotation Lock: ${rotateNextEnabled ? "ON" : "OFF"}`);
+            return;
+        }
+
         // ==================================
         // SPACE
         // ==================================
@@ -2106,30 +2237,17 @@ document.addEventListener(
 
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith(
-                    "video/"
-                )
+                ["video", "audio"].includes(getMediaType(currentMediaFile.name))
             ) {
-
                 event.preventDefault();
-
-
-                if (
-                    videoPlayer.paused
-                ) {
-
+                if (videoPlayer.paused) {
                     videoPlayer.play();
-
-                }
-
-                else {
-
+                    showShortcutToast("Play");
+                } else {
                     videoPlayer.pause();
-
+                    showShortcutToast("Pause");
                 }
-
             }
-
         }
 
 
@@ -2143,20 +2261,11 @@ document.addEventListener(
 
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith(
-                    "video/"
-                )
+                ["video", "audio"].includes(getMediaType(currentMediaFile.name))
             ) {
-
                 event.preventDefault();
-
-
-                videoPlayer.currentTime =
-                    Math.max(
-                        0,
-                        videoPlayer.currentTime - 10
-                    );
-
+                videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+                showShortcutToast("Seek −10 seconds");
             }
 
         }
@@ -2169,13 +2278,11 @@ document.addEventListener(
         else if (event.key.toLowerCase() === "k") {
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith("video/")
+                ["video", "audio"].includes(getMediaType(currentMediaFile.name))
             ) {
                 event.preventDefault();
-                videoPlayer.currentTime = Math.min(
-                    videoPlayer.duration || Infinity,
-                    videoPlayer.currentTime + 10
-                );
+                videoPlayer.currentTime = Math.min(videoPlayer.duration || Infinity, videoPlayer.currentTime + 10);
+                showShortcutToast("Seek +10 seconds");
             }
         }
 
@@ -2186,13 +2293,19 @@ document.addEventListener(
         else if (event.key.toLowerCase() === "l") {
             if (
                 currentMediaFile &&
-                currentMediaFile.type.startsWith("video/")
+                ["video", "audio"].includes(getMediaType(currentMediaFile.name))
             ) {
                 event.preventDefault();
                 toggleVideoLoop();
+                showShortcutToast(`Loop: ${videoPlayer.loop ? "ON" : "OFF"}`);
             }
         }
 
+        // A = Toggle Auto Play
+        else if (event.key.toLowerCase() === "a") {
+            event.preventDefault();
+            toggleAutoPlay();
+        }
 
         // ==================================
         // LEFT
@@ -2205,6 +2318,7 @@ document.addEventListener(
             event.preventDefault();
 
             previousMediaFile();
+            showShortcutToast("Previous media");
 
         }
 
@@ -2220,6 +2334,7 @@ document.addEventListener(
             event.preventDefault();
 
             nextMediaFile();
+            showShortcutToast("Next media");
 
         }
 
@@ -2235,10 +2350,8 @@ document.addEventListener(
             event.preventDefault();
 
 
-            playerModal.scrollBy({
-                top: -400,
-                behavior: "smooth"
-            });
+            playerModal.scrollBy({ top: -400, behavior: "smooth" });
+            showShortcutToast("Scroll up");
 
         }
 
@@ -2254,10 +2367,8 @@ document.addEventListener(
             event.preventDefault();
 
 
-            playerModal.scrollBy({
-                top: 400,
-                behavior: "smooth"
-            });
+            playerModal.scrollBy({ top: 400, behavior: "smooth" });
+            showShortcutToast("Scroll down");
 
         }
 
@@ -2269,6 +2380,7 @@ document.addEventListener(
         else if (event.key.toLowerCase() === "r") {
             event.preventDefault();
             rotateVideoRight();
+            showShortcutToast(`Rotate: ${videoRotation}°`);
         }
 
         // ==================================
@@ -2282,6 +2394,7 @@ document.addEventListener(
             event.preventDefault();
 
             toggleFullscreen();
+            showShortcutToast("Fullscreen toggle");
 
         }
 
@@ -2364,7 +2477,7 @@ function createBelowMediaCard(
     // ======================================
 
     if (
-        file.type.startsWith("video/")
+        getMediaType(file.name) === "video"
     ) {
 
         const video =
@@ -2419,11 +2532,19 @@ function createBelowMediaCard(
 
 
     // ======================================
+    // AUDIO
+    // ======================================
+    else if (getMediaType(file.name) === "audio") {
+        const art = document.createElement("div");
+        art.className = "audio-thumbnail-art compact";
+        art.innerHTML = `<span>♫</span>`;
+        thumbnail.appendChild(art);
+    }
+
+    // ======================================
     // IMAGE
     // ======================================
-
     else {
-
         const image =
             document.createElement("img");
 
@@ -2477,7 +2598,7 @@ function createBelowMediaCard(
 
 
     if (
-        file.type.startsWith("video/")
+        getMediaType(file.name) === "video"
     ) {
 
         info.innerText =
@@ -2563,14 +2684,11 @@ function toggleFullscreen() {
 
     if (
         currentMediaFile &&
-        currentMediaFile.type.startsWith(
-            "video/"
-        )
+        ["video", "audio"].includes(getMediaType(currentMediaFile.name))
     ) {
-
-        fullscreenElement =
-            document.querySelector(".watch-main");
-
+        // Fullscreen the watch area for both video and audio so artwork,
+        // title and custom controls remain available without native controls.
+        fullscreenElement = document.querySelector(".watch-main");
     }
 
 
@@ -2580,13 +2698,11 @@ function toggleFullscreen() {
 
     else if (
         currentMediaFile &&
-        currentMediaFile.type.startsWith(
-            "image/"
-        )
+        getMediaType(currentMediaFile.name) === "image"
     ) {
 
-        fullscreenElement =
-            imageViewer;
+        // Fullscreen the player area so image controls and shortcut feedback stay visible.
+        fullscreenElement = document.querySelector(".watch-main");
 
     }
 
@@ -2685,12 +2801,18 @@ document.addEventListener("fullscreenchange", function () {
     }
 });
 
-// Recalculate the rotated video after entering or leaving fullscreen.
+// Recalculate media dimensions after entering or leaving fullscreen.
 document.addEventListener("fullscreenchange", function () {
-    if (!currentMediaFile || !currentMediaFile.type.startsWith("video/")) return;
+    if (!currentMediaFile) return;
     requestAnimationFrame(function () {
         requestAnimationFrame(function () {
-            applyVideoRotation();
+            if (getMediaType(currentMediaFile.name) === "image") {
+                applyImageRotation();
+            } else if (getMediaType(currentMediaFile.name) === "video") {
+                applyVideoRotation();
+            }
         });
     });
 });
+
+window.addEventListener("resize", function () { requestAnimationFrame(applyVideoRotation); });

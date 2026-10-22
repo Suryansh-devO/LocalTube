@@ -3456,3 +3456,197 @@ body:not(.watching-media) .main .top-actions {
     transform-origin: center center !important;
     background: #000 !important;
 }
+
+/* FINAL PATCH v10: audio artwork and shortcut status overlay */
+.audio-viewer {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 35%, #35304f 0%, #191923 42%, #080808 100%);
+}
+.audio-art-icon {
+    width: clamp(110px, 24vw, 230px);
+    height: clamp(110px, 24vw, 230px);
+    display: grid;
+    place-items: center;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #ff643d, #8d48dc 55%, #202b70);
+    box-shadow: 0 18px 55px rgba(0,0,0,.45);
+    color: white;
+    font-size: clamp(58px, 11vw, 120px);
+}
+.audio-viewer-title {
+    max-width: min(80%, 700px);
+    font-size: clamp(16px, 2vw, 24px);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+.audio-viewer-subtitle { color: #bdbdc8; font-size: 14px; }
+.audio-thumbnail-art {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #ff643d, #8d48dc 55%, #202b70);
+    color: white;
+}
+.audio-thumbnail-art span { font-size: 42px; line-height: 1; }
+.audio-thumbnail-art small { font-size: 10px; font-weight: 700; letter-spacing: 2px; }
+.audio-thumbnail-art.compact span { font-size: 32px; }
+.shortcut-status-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    z-index: 100000;
+    transform: translate(-50%, 12px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    padding: 11px 18px;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(28,28,28,.94);
+    box-shadow: 0 8px 30px rgba(0,0,0,.45);
+    font: 600 14px/1.2 Arial, sans-serif;
+    transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+    white-space: nowrap;
+}
+.shortcut-status-toast.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+@media (max-width: 700px) {
+    .shortcut-status-toast { bottom: 16px; max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
+}
+
+/* Audio artwork must be positioned inside the player viewport. */
+.watch-page .main-video { position: relative !important; }
+
+
+/* FINAL PATCH v11: keep shortcut feedback visible in fullscreen.
+   The toast is appended inside .watch-main so it remains part of the fullscreen subtree. */
+.watch-main:fullscreen .shortcut-status-toast {
+    position: absolute !important;
+    left: 50% !important;
+    bottom: 28px !important;
+    z-index: 100001 !important;
+    max-width: calc(100vw - 32px);
+    white-space: nowrap;
+    pointer-events: none !important;
+}
+@media (max-width: 700px) {
+    .watch-main:fullscreen .shortcut-status-toast {
+        bottom: 16px !important;
+        white-space: normal;
+        text-align: center;
+    }
+}
+
+/* FIX: show images above the player area instead of behind the black video wrapper. */
+.watch-page .main-video #imageViewer {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+.watch-page .main-video .video-wrapper[style*="display: none"] {
+    display: none !important;
+}
+
+/* Image viewer controls: keep navigation, rotation and fullscreen available. */
+#customVideoControls.image-mode #playPauseBtn,
+#customVideoControls.image-mode #videoCurrentTime,
+#customVideoControls.image-mode #videoProgress,
+#customVideoControls.image-mode #videoDuration,
+#customVideoControls.image-mode #loopVideoBtn,
+#customVideoControls.image-mode #autoPlayToggleBtn {
+    display: none !important;
+}
+
+#imageViewer {
+    transform-origin: center center;
+    transition: transform 0.22s ease;
+}
+
+
+/* Image rotation: preserve the image aspect ratio and let JS fit its rotated bounds. */
+.watch-page .main-video {
+    position: relative !important;
+    isolation: isolate;
+}
+.watch-page .main-video #imageViewer {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    transform-origin: center center !important;
+    background: transparent;
+}
+.watch-main:fullscreen .main-video #imageViewer {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+
+/* Stable video rotation: transform the wrapper layer, never the decoded video. */
+.watch-page .video-wrapper {
+    position: relative !important;
+    overflow: hidden !important;
+    isolation: isolate;
+}
+.watch-page #videoRotationLayer {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform-origin: center center !important;
+    will-change: transform;
+}
+.watch-page #videoRotationLayer #videoPlayer {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    transform: none !important;
+    flex: 0 0 auto !important;
+}
+.watch-main:fullscreen .video-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+/* Reliable rotated-video rendering: canvas mirrors frames only while rotated. */
+.watch-page .video-wrapper { position: relative !important; overflow: hidden !important; background: #000 !important; }
+.watch-page #videoRotationLayer { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; transform: none !important; }
+.watch-page #videoRotationCanvas { display: none; position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; background: #000; pointer-events: none; }
+.watch-page #videoPlayer { transform: none !important; }
